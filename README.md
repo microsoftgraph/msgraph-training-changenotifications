@@ -1,0 +1,1 @@
+# msgraph-training-changenotifications
