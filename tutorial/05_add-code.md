@@ -178,7 +178,7 @@ namespace msgraphapp.Controllers
   public class NotificationsController : ControllerBase
   {
 
-    // for production use you should store these in application settings    
+    // for production use you should store these in application settings
     private const string ApiUrl = "<NGROK URL>";
     private const string TenantId = "<TENANT ID>";
     private const string AppId = "<APP ID>";
@@ -255,7 +255,7 @@ namespace msgraphapp.Controllers
         new KeyValuePair<string, string>("scope", "https://graph.microsoft.com/.default"),
         new KeyValuePair<string, string>("grant_type", "client_credentials")
       });
-       
+
       using (var client = new HttpClient())
       {
         client.BaseAddress = new Uri("https://login.microsoftonline.com");
@@ -277,8 +277,8 @@ namespace msgraphapp.Controllers
 
 In **NotificationsController.cs** replace the following variables with the values you copied earlier:
 
-- `<NGROK URL>` should be set to the https ngrok url you copied earlier. 
-- `<TENANT ID>` should be your Office 365 tenant id, for example. **contoso.onmicrosoft.com**. 
+- `<NGROK URL>` should be set to the https ngrok url you copied earlier.
+- `<TENANT ID>` should be your Office 365 tenant id, for example. **contoso.onmicrosoft.com**.
 - `<APP ID>` and `<APP SECRET>` should be the application id and secret you copied earlier when you created the application registration.
 
 ```csharp

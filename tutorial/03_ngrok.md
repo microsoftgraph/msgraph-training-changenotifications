@@ -14,7 +14,7 @@ ngrok http 5000
 
 This will start ngrok and will tunnel requests from an external ngrok url to your development machine on port 5000.
 
-Copy the https forwarding address. In the example below that would be **https://787b8292.ngrok.io**. You will need this later.
+Copy the https forwarding address. In the example below that would be `https://787b8292.ngrok.io`. You will need this later.
 
 ```shell
 ngrok by @inconshreveable
@@ -30,4 +30,3 @@ Forwarding                    https://787b8292.ngrok.io -> http://localhost:5000
 Connections                   ttl     opn     rt1     rt5     p50     p90
                               0       0       0.00    0.00    0.00    0.00
 ```
-

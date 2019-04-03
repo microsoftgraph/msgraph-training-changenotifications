@@ -1,6 +1,6 @@
 <!-- markdownlint-disable MD002 MD041 -->
 
-### Register and grant consent to the application in Mirosoft Graph
+### Register and grant consent to the application in Microsoft Graph
 
 1. Open a browser and navigate to the [Azure Active Directory admin center](https://portal.azure.com). Login using a **Work or School Account**.
 
@@ -31,11 +31,11 @@
 
     ![A screenshot of the newly added client secret](./images/05.png)
 
-1. Select **API Permissions** under **Manage**. **Add a permission** and select **Microsoft Graph**. Select **Application Permission** and expand **User** and select the **User.ReadWrite.All** scope. Select **Add permissions** to save your changes. 
+1. Select **API Permissions** under **Manage**. **Add a permission** and select **Microsoft Graph**. Select **Application Permission** and expand **User** and select the **User.ReadWrite.All** scope. Select **Add permissions** to save your changes.
 
     ![A screenshot of the newly added client secret](./images/06.png)
 
-The application requests an application permission with the User.ReadWrite.All scope. This permission requires administrative consent. 
+The application requests an application permission with the User.ReadWrite.All scope. This permission requires administrative consent.
 
 Copy the following URL and replace the `{clientId}` placeholder with your application's Application Id from the application registration portal.
 
@@ -56,6 +56,3 @@ After signing in, you are prompted to consent to the permission requests to read
 After accepting you will redirected to your localhost and will likely see an error page. That is ok. In a production application you would redirect the user to your applications web page.
 
 ![Screen shot of user consent](./images/09.png)
-
-
-

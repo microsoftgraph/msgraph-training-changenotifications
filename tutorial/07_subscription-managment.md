@@ -2,7 +2,7 @@
 
 ### Manage notification subscriptions
 
-Subscriptions for notifications expire and need to be renewed periodically. 
+Subscriptions for notifications expire and need to be renewed periodically.
 
 Open **NotificationsController.cs** and replace the `Get()` method with the following code:
 
@@ -115,7 +115,7 @@ private void RenewSubscription(Subscription subscription)
 
 The `CheckSubscriptions` is called every 15 seconds by the timer. The `RenewSubscription` method renews a subscription and is only called if a subscription is going to expire in the next two minutes.
 
-Select **Debug > Start debugging** to run the application. Navigate to the following url **http://localhost:5000/api/notifications** to register a new subscription. 
+Select **Debug > Start debugging** to run the application. Navigate to the following url `http://localhost:5000/api/notifications` to register a new subscription.
 
 You will see the following output in the `DEBUG OUTPUT` window of Visual Studio Code approximately every 15 seconds.  This is the timer checking the subscription for expiry.
 
@@ -131,5 +131,3 @@ Renewed subscription: 07ca62cd-1a1b-453c-be7b-4d196b3c6b5b, New Expiration: 3/10
 ```
 
 This indicates that the subscription was renewed and shows the new expiry time.
-
-

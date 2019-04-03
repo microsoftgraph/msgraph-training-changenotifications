@@ -38,7 +38,7 @@ public ActionResult<string> Post([FromQuery]string validationToken = null)
 }
 ```
 
-The `Post` method will now call `CheckForUpdates` when a notification is received. Below the `Post` method add the following two new methods: 
+The `Post` method will now call `CheckForUpdates` when a notification is received. Below the `Post` method add the following two new methods:
 
 ```csharp
 private static string DeltaLink = null;
@@ -149,7 +149,7 @@ namespace msgraphapp.Models
     public Change Removed { get; set; }
   }
 
-  public class Change 
+  public class Change
   {
     [JsonProperty(PropertyName = "reason")]
     public string Reason { get; set; }
@@ -161,9 +161,9 @@ namespace msgraphapp.Models
 
 Select **Debug > Start debugging** to run the application. After building the application a browser window will open to a 404 page. This is ok since our application is an API and not a webpage.
 
-To subscribe for change notifications for users navigate to the following url **http://localhost:5000/api/notifications**.
+To subscribe for change notifications for users navigate to the following url `http://localhost:5000/api/notifications`.
 
-Open a browser and visit **https://admin.microsoft.com/AdminPortal**. Sign-in using an administrator account. Select **Users > Active users**. Select an active user and select **Edit** for their **Contact information**. Update the **Mobile phone** value with a new number and Select **Save**. 
+Open a browser and visit the [Microsoft 365 admin center](https://admin.microsoft.com/AdminPortal). Sign-in using an administrator account. Select **Users > Active users**. Select an active user and select **Edit** for their **Contact information**. Update the **Mobile phone** value with a new number and Select **Save**.
 
 ![Screen shot of user details](./images/10.png)
 
@@ -173,7 +173,7 @@ Wait for the notification to be received as indicated in the **DEBUG CONSOLE** a
 Received notification: 'Users/7a7fded6-0269-42c2-a0be-512d58da4463', 7a7fded6-0269-42c2-a0be-512d58da4463
 ```
 
-The application will now initiate a delta query with the graph to get all the users and log out some of their details to the console output. 
+The application will now initiate a delta query with the graph to get all the users and log out some of their details to the console output.
 
 ```shell
 Got access token
@@ -210,9 +210,9 @@ User: d4e3a3e0-72e9-41a6-9538-c23e10a16122,   Removed?:deleted
 Got deltalink
 ```
 
-In the user management portal edit the user again and **Save** again using a different mobile phone number. 
+In the user management portal edit the user again and **Save** again using a different mobile phone number.
 
-The application will receive another notification and will query the graph again using the last delta link it received. However, this time you will notice that only the modified user was returned in the results. 
+The application will receive another notification and will query the graph again using the last delta link it received. However, this time you will notice that only the modified user was returned in the results.
 
 ```shell
 Getting users: https://graph.microsoft.com/v1.0/users/delta?$deltatoken=moXwmvoHW4B2uevGNLf2Brpv8smiFdOLsp
