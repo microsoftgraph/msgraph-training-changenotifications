@@ -38,139 +38,80 @@ public ActionResult<string> Post([FromQuery]string validationToken = null)
 }
 ```
 
-The `Post` method will now call `CheckForUpdates` when a notification is received. Below the `Post` method add the following two new methods:
+The `Post` method will now call `CheckForUpdates` when a notification is received. Below the `Post` method add the following two new methods: 
 
 ```csharp
-private static string DeltaLink = null;
+private static object DeltaLink = null;
+
+private static IUserDeltaCollectionPage lastPage = null;
 
 private void CheckForUpdates()
 {
-  var uri = "";
+  var graphClient = GetGraphClient();
 
-  // get an access token from Graph
-  var accessToken = GetAccessToken();
+  // get a page of users
+  var users = GetUsers(graphClient, DeltaLink);
 
-  if(string.IsNullOrEmpty(DeltaLink))
+  OutputUsers(users);
+
+  // go through all of the pages so that we can get the delta link on the last page.
+  while (users.NextPageRequest != null)
   {
-    uri = "https://graph.microsoft.com/v1.0/users/delta";
+      users = users.NextPageRequest.GetAsync().Result;
+      OutputUsers(users);
   }
-  else
+
+  object deltaLink;
+
+  if (users.AdditionalData.TryGetValue("@odata.deltaLink", out deltaLink))
   {
-    uri = DeltaLink;
-  }
-
-  Console.WriteLine($"Getting users: {uri}");
-
-  while (true)
-  {
-    var users = GetChangedUsers(uri, accessToken);
-
-    foreach(var user in users.Users)
-    {
-      var message = $"User: {user.Id}, {user.GivenName} {user.Surname}";
-
-      if(user.Removed?.Reason != null)
-      {
-        message += "Removed?:{user.Removed?.Reason}";
-      }
-
-      Console.WriteLine(message);
-    }
-
-    if(!string.IsNullOrEmpty(users.NextLink))
-    {
-      Console.WriteLine($"Got nextlink");
-      uri = users.NextLink;
-    }
-    else
-    {
-      DeltaLink = users.DeltaLink;
-      Console.WriteLine($"Got deltalink");
-      break;
-    }
+      DeltaLink = deltaLink;
   }
 }
 
-private UsersResponse GetChangedUsers(string uri, string accessToken)
+private void OutputUsers(IUserDeltaCollectionPage users)
 {
-  using (var client = new HttpClient())
+  foreach(var user in users)
+    {
+      var message = $"User: {user.Id}, {user.GivenName} {user.Surname}";
+      Console.WriteLine(message);
+    }
+}
+
+private IUserDeltaCollectionPage GetUsers(GraphServiceClient graphClient, object deltaLink)
+{
+  IUserDeltaCollectionPage page;
+
+  if(lastPage == null)
   {
-    client.DefaultRequestHeaders.Add("Authorization", $"bearer {accessToken}");
+    page = graphClient
+      .Users
+      .Delta()
+      .Request()
+      .GetAsync()
+      .Result;
 
-    var result = client.GetAsync(uri).Result;
-    string response = result.Content.ReadAsStringAsync().Result;
-
-    var users = JsonConvert.DeserializeObject<UsersResponse>(response);
-
-    return users;
   }
+  else
+  {
+    lastPage.InitializeNextPageRequest(graphClient, deltaLink.ToString());
+    page = lastPage.NextPageRequest.GetAsync().Result;
+  }
+
+  lastPage = page;
+  return page;
 }
 ```
 
 The `CheckForUpdates` method calls the graph using the delta url and then pages through the results until it finds a new `deltalink` on the final page of results. It stores the url in memory until the code is notified again when another notification is triggered.
 
-**Right-click** the **Models** folder and add a new file **UsersResponse.cs**
-
-Add the following code to the file.
-
-```csharp
-// Copyright (c) Microsoft. All rights reserved. Licensed under the MIT license. See LICENSE in the project root for license information.
-using Newtonsoft.Json;
-using System;
-
-namespace msgraphapp.Models
-{
-  // A change notification.
-  public class UsersResponse
-  {
-    // The type of change.
-    [JsonProperty(PropertyName = "value")]
-    public User[] Users { get; set; }
-
-    [JsonProperty(PropertyName = "@odata.context")]
-    public string Context { get; set; }
-
-    [JsonProperty(PropertyName = "@odata.deltaLink")]
-    public string DeltaLink { get; set; }
-
-    [JsonProperty(PropertyName = "@odata.nextLink")]
-    public string NextLink { get; set; }
-
-  }
-
-  public class User
-  {
-    [JsonProperty(PropertyName = "displayName")]
-    public string DisplayName { get; set; }
-
-    [JsonProperty(PropertyName = "givenName")]
-    public string GivenName { get; set; }
-
-    [JsonProperty(PropertyName = "surname")]
-    public string Surname { get; set; }
-
-    [JsonProperty(PropertyName = "id")]
-    public string Id { get; set; }
-
-    [JsonProperty(PropertyName = "@removed")]
-    public Change Removed { get; set; }
-  }
-
-  public class Change
-  {
-    [JsonProperty(PropertyName = "reason")]
-    public string Reason { get; set; }
-  }
-}
-```
-
 **Save** all files.
 
 Select **Debug > Start debugging** to run the application. After building the application a browser window will open to a 404 page. This is ok since our application is an API and not a webpage.
 
-To subscribe for change notifications for users navigate to the following url `http://localhost:5000/api/notifications`.
+To subscribe for change notifications for users navigate to the following url **http://localhost:5000/api/notifications**.
 
-Open a browser and visit the [Microsoft 365 admin center](https://admin.microsoft.com/AdminPortal). Sign-in using an administrator account. Select **Users > Active users**. Select an active user and select **Edit** for their **Contact information**. Update the **Mobile phone** value with a new number and Select **Save**.
+Open a browser and visit **https://admin.microsoft.com/AdminPortal**. Sign-in using an administrator account. Select **Users > Active users**. Select an active user and select **Edit** for their **Contact information**. Update the **Mobile phone** value with a new number and Select **Save**. 
 
 ![Screen shot of user details](./images/10.png)
 
@@ -180,11 +121,9 @@ Wait for the notification to be received as indicated in the **DEBUG CONSOLE** a
 Received notification: 'Users/7a7fded6-0269-42c2-a0be-512d58da4463', 7a7fded6-0269-42c2-a0be-512d58da4463
 ```
 
-The application will now initiate a delta query with the graph to get all the users and log out some of their details to the console output.
+The application will now initiate a delta query with the graph to get all the users and log out some of their details to the console output. 
 
 ```shell
-Got access token
-Getting users: https://graph.microsoft.com/v1.0/users/delta
 User: 19e429d2-541a-4e0b-9873-6dff9f48fabe, Allan Deyoung
 User: 05501e79-f527-4913-aabf-e535646d7ffa, Christie Cline
 User: fecac4be-76e7-48ec-99df-df745854aa9c, Debra Berger
@@ -217,14 +156,12 @@ User: d4e3a3e0-72e9-41a6-9538-c23e10a16122,   Removed?:deleted
 Got deltalink
 ```
 
-In the user management portal edit the user again and **Save** again using a different mobile phone number.
+In the user management portal edit the user again and **Save** again using a different mobile phone number. 
 
-The application will receive another notification and will query the graph again using the last delta link it received. However, this time you will notice that only the modified user was returned in the results.
+The application will receive another notification and will query the graph again using the last delta link it received. However, this time you will notice that only the modified user was returned in the results. 
 
 ```shell
-Getting users: https://graph.microsoft.com/v1.0/users/delta?$deltatoken=moXwmvoHW4B2uevGNLf2Brpv8smiFdOLsp
-User: 7a7fded6-0269-42c2-a0be-512d58da4463, Adele Vance Removed?:
-Got deltalink
+User: 7a7fded6-0269-42c2-a0be-512d58da4463, Adele Vance
 ```
 
 Using this combination of notifications with delta query you can be assured you wont miss any updates to a resource. Notifications may be missed due to transient connection issues, however the next time your application gets a notification it will pick up all the changes since the last successful query.
