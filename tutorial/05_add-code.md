@@ -11,12 +11,13 @@ Open the **Startup.cs** file and comment out the following line to disable ssl r
 The application uses several new model classes for (de)serialization of messages to/from the Microsoft Graph.
 
 Right-click in the project file tree and select **New Folder**. Name it **Models**
-Right-click the **Models** folder and add four new files:
+Right-click the **Models** folder and add five new files:
 
 - **Notification.cs**
 - **ResourceData.cs**
 - **Subscription.cs**
 - **GraphToken.cs**
+- **MyConfig.cs**
 
 Replace the contents of **Notification.cs** with the following:
 
@@ -132,7 +133,7 @@ namespace msgraphapp.Models
 }
 ```
 
-Finally, replace the contents of **GraphToken.cs** with the following:
+Replace the contents of **GraphToken.cs** with the following:
 
 ```csharp
 using Newtonsoft.Json;
@@ -149,6 +150,58 @@ namespace msgraphapp.Models
   }
 }
 ```
+
+Replace the contents of **MyConfig.cs** with the following:
+
+```csharp
+namespace msgraphapp
+{
+    public class MyConfig
+    {
+        public string AppId { get; set; }
+        public string AppSecret { get; set; }
+        public string TenantId { get; set; }
+        public string Ngrok { get; set; }
+    }
+}
+```
+
+Open the **Startup.cs** file and replace the contents with the following.
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+  services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+   var config = new MyConfig();
+  Configuration.Bind("MyConfig", config);
+  services.AddSingleton(config);
+}
+```
+
+Open the **appsettings.json** file and replace the content the following.
+
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning"
+    }
+  },
+  "MyConfig":
+  {
+    "AppId": "<APP ID>",
+    "AppSecret": "<APP SECRET>",
+    "TenantId": "<TENANT ID>",
+    "Ngrok": "<NGROK URL>"
+  }
+}
+```
+
+Replace the following variables with the values you copied earlier:
+
+    - `<NGROK URL>` should be set to the https ngrok url you copied earlier. 
+    - `<TENANT ID>` should be your Office 365 tenant id, for example. **contoso.onmicrosoft.com**. 
+    - `<APP ID>` and `<APP SECRET>` should be the application id and secret you copied earlier when you created the application registration.
 
 ### Add notification controller
 
@@ -170,6 +223,7 @@ using msgraphapp.Models;
 using Newtonsoft.Json;
 using System.Net;
 using System.Net.Http.Formatting;
+using System.Threading;
 
 namespace msgraphapp.Controllers
 {
@@ -177,17 +231,17 @@ namespace msgraphapp.Controllers
   [ApiController]
   public class NotificationsController : ControllerBase
   {
+    private readonly MyConfig config;
 
-    // for production use you should store these in application settings
-    private const string ApiUrl = "<NGROK URL>";
-    private const string TenantId = "<TENANT ID>";
-    private const string AppId = "<APP ID>";
-    private const string AppSecret = "<APP SECRET>";
+    public NotificationsController(MyConfig config)
+    {
+      this.config = config;
+    }
 
     [HttpGet]
     public ActionResult<string> Get()
     {
-      // get an access token from graph
+      // get an access token from Graph
       var accessToken = GetAccessToken();
 
       // subscribe
@@ -199,9 +253,9 @@ namespace msgraphapp.Controllers
         var subscription = new Subscription()
         {
           ChangeType = "updated",
-          NotificationUrl = ApiUrl + "/api/notifications",
+          NotificationUrl = config.Ngrok + "/api/notifications",
           Resource = "/users",
-          ExpirationDateTime = DateTime.UtcNow + new TimeSpan(1, 0, 0, 0),
+          ExpirationDateTime = DateTime.UtcNow.AddMinutes(5),
           ClientState = "SecretClientState"
         };
 
@@ -216,7 +270,6 @@ namespace msgraphapp.Controllers
       }
     }
 
-    //POST ?validationToken={opaqueTokenCreatedByMicrosoftGraph}    [HttpPost]
     public ActionResult<string> Post([FromQuery]string validationToken = null)
     {
       // handle validation
@@ -245,13 +298,13 @@ namespace msgraphapp.Controllers
 
     private string GetAccessToken()
     {
-      var url = new Uri($"https://login.microsoftonline.com/{TenantId}/oauth2/v2.0/token");
+      var url = new Uri($"https://login.microsoftonline.com/{config.TenantId}/oauth2/v2.0/token");
       string accessToken = "";
 
       var content = new FormUrlEncodedContent(new[]
       {
-        new KeyValuePair<string, string>("client_id", AppId),
-        new KeyValuePair<string, string>("client_secret", AppSecret),
+        new KeyValuePair<string, string>("client_id", config.AppId),
+        new KeyValuePair<string, string>("client_secret", config.AppSecret),
         new KeyValuePair<string, string>("scope", "https://graph.microsoft.com/.default"),
         new KeyValuePair<string, string>("grant_type", "client_credentials")
       });
@@ -260,7 +313,7 @@ namespace msgraphapp.Controllers
       {
         client.BaseAddress = new Uri("https://login.microsoftonline.com");
 
-        var result = client.PostAsync($"/{TenantId}/oauth2/v2.0/token", content).Result;
+        var result = client.PostAsync($"/{config.TenantId}/oauth2/v2.0/token", content).Result;
 
         string tokenResult = result.Content.ReadAsStringAsync().Result;
         var token = JsonConvert.DeserializeObject<GraphToken>(tokenResult);
@@ -273,19 +326,6 @@ namespace msgraphapp.Controllers
     }
   }
 }
-```
-
-In **NotificationsController.cs** replace the following variables with the values you copied earlier:
-
-- `<NGROK URL>` should be set to the https ngrok url you copied earlier.
-- `<TENANT ID>` should be your Office 365 tenant id, for example. **contoso.onmicrosoft.com**.
-- `<APP ID>` and `<APP SECRET>` should be the application id and secret you copied earlier when you created the application registration.
-
-```csharp
-private const string ApiUrl = "<NGROK URL>";
-private const string TenantId = "<TENANT ID>";
-private const string AppId = "<APP ID>";
-private const string AppSecret = "<APP SECRET>";
 ```
 
 **Save** all files.

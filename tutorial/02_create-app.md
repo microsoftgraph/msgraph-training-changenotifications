@@ -16,7 +16,7 @@
 
     ![A screenshot of the Register an application page](./images/02.png)
 
-1. Select **Register**. On the **GraphNotificationTutorial** page, copy the value of the **Application (client) ID** and save it, you will need it in the next step.
+1. Select **Register**. On the **GraphNotificationTutorial** page, copy the value of the **Application (client) ID** and **Directory (tenant) ID** save it, you will need them in the next step.
 
     ![A screenshot of the application ID of the new app registration](./images/03.png)
 
@@ -35,24 +35,8 @@
 
     ![A screenshot of the newly added client secret](./images/06.png)
 
-The application requests an application permission with the User.ReadWrite.All scope. This permission requires administrative consent.
+The application requests an application permission with the **User.ReadWrite.All** scope. This permission requires administrative consent.
 
-Copy the following URL and replace the `{clientId}` placeholder with your application's Application Id from the application registration portal.
-
-```html
-https://login.microsoftonline.com/common/adminconsent?client_id={clientId}&redirect_uri=http://localhost
-```
-
-Paste the URL into a browser. You are prompted to sign in. You must sign in as a user with administrator privileges in order to consent this application.
+Select **Grant admin consent for Contoso** and then select **Yes** to consent this application and grant the application access to your tenant using the scopes you specified.
 
 ![Screen shot of sign in](./images/07.png)
-
-After signing in, you are prompted to consent to the permission requests to read and write all users' full profiles and to sign in and read the current user's profile. Select **Accept**.
-
-![Screen shot of user consent](./images/08.png)
-
-> **Note:** There can be an approximately a 20 minute data replication delay between the time when an application is granted admin consent and when API calls can be made using the application.
-
-After accepting you will redirected to your localhost and will likely see an error page. That is ok. In a production application you would redirect the user to your applications web page.
-
-![Screen shot of user consent](./images/09.png)

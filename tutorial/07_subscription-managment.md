@@ -13,7 +13,7 @@ private static Timer subscriptionTimer = null;
 [HttpGet]
 public ActionResult<string> Get()
 {
-  // get an access token from graph
+  // get an access token from Graph
   var accessToken = GetAccessToken();
 
   // subscribe
@@ -25,7 +25,7 @@ public ActionResult<string> Get()
     var subscription = new Subscription()
     {
       ChangeType = "updated",
-      NotificationUrl = ApiUrl + "/api/notifications",
+      NotificationUrl = config.Ngrok + "/api/notifications",
       Resource = "/users",
       ExpirationDateTime = DateTime.UtcNow.AddMinutes(5),
       ClientState = "SecretClientState"
@@ -82,7 +82,7 @@ private void RenewSubscription(Subscription subscription)
 {
   Console.WriteLine($"Current subscription: {subscription.Id}, Expiration: {subscription.ExpirationDateTime}");
 
-  // get an access token from graph
+  // get an access token from Graph
   var accessToken = GetAccessToken();
 
   // renew subscription
@@ -113,7 +113,7 @@ private void RenewSubscription(Subscription subscription)
 }
 ```
 
-The `CheckSubscriptions` is called every 15 seconds by the timer. The `RenewSubscription` method renews a subscription and is only called if a subscription is going to expire in the next two minutes.
+The `CheckSubscriptions` method is called every 15 seconds by the timer. For production use this should be set to a more reasonable value to reduce the number of unnecessary calls to Graph. The `RenewSubscription` method renews a subscription and is only called if a subscription is going to expire in the next two minutes.
 
 Select **Debug > Start debugging** to run the application. Navigate to the following url `http://localhost:5000/api/notifications` to register a new subscription.
 
