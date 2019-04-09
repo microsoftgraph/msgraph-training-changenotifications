@@ -12,6 +12,8 @@ Once the command finishes, run the following commands to ensure your new project
 
 ```shell
 cd msgraphapp
+dotnet add package Microsoft.Identity.Client
+dotnet add package Microsoft.Graph
 dotnet run
 ```
 

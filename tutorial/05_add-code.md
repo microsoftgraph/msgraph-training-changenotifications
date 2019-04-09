@@ -11,12 +11,10 @@ Open the **Startup.cs** file and comment out the following line to disable ssl r
 The application uses several new model classes for (de)serialization of messages to/from the Microsoft Graph.
 
 Right-click in the project file tree and select **New Folder**. Name it **Models**
-Right-click the **Models** folder and add five new files:
+Right-click the **Models** folder and add three new files:
 
 - **Notification.cs**
 - **ResourceData.cs**
-- **Subscription.cs**
-- **GraphToken.cs**
 - **MyConfig.cs**
 
 Replace the contents of **Notification.cs** with the following:
@@ -87,66 +85,6 @@ namespace msgraphapp.Models
     // The OData type of the resource: "#Microsoft.Graph.Message", "#Microsoft.Graph.Event", or "#Microsoft.Graph.Contact".
     [JsonProperty(PropertyName = "@odata.type")]
     public string ODataType { get; set; }
-  }
-}
-```
-
-Replace the contents of **Subscription.cs** with the following:
-
-```csharp
-using Newtonsoft.Json;
-using System;
-
-namespace msgraphapp.Models
-{
-  public class Subscription
-  {
-    // The type of change in the subscribed resource that raises a notification.
-    [JsonProperty(PropertyName = "changeType")]
-    public string ChangeType { get; set; }
-
-    // The string that Microsoft Graph should send with each notification. Maximum length is 255 characters.
-    // To verify that the notification is from Microsoft Graph, compare the value received with the notification to the value you sent with the subscription request.
-    [JsonProperty(PropertyName = "clientState")]
-    public string ClientState { get; set; }
-
-    // The URL of the endpoint that receives the subscription response and notifications. Requires https.
-    // This can include custom query parameters.
-    [JsonProperty(PropertyName = "notificationUrl")]
-    public string NotificationUrl { get; set; }
-
-    // The resource to monitor for changes.
-    [JsonProperty(PropertyName = "resource")]
-    public string Resource { get; set; }
-
-    // The amount of time in UTC format when the webhook subscription expires, based on the subscription creation time.
-    // The maximum time varies for the resource subscribed to. This sample sets it to the 4230 minute maximum for messages.
-    // See https://developer.microsoft.com/graph/docs/api-reference/v1.0/resources/subscription for maximum values for resources.
-    [JsonProperty(PropertyName = "expirationDateTime")]
-    public DateTimeOffset ExpirationDateTime { get; set; }
-
-    // // The unique identifier for the webhook subscription.
-    // [JsonProperty(PropertyName = "id")]
-    [JsonProperty("id", NullValueHandling=NullValueHandling.Ignore)]
-    public string Id { get; set; }
-  }
-}
-```
-
-Replace the contents of **GraphToken.cs** with the following:
-
-```csharp
-using Newtonsoft.Json;
-using System;
-
-namespace msgraphapp.Models
-{
-  // A change notification.
-  public class GraphToken
-  {
-    // The type of change.
-    [JsonProperty(PropertyName = "access_token")]
-    public string AccessToken { get; set; }
   }
 }
 ```
@@ -224,6 +162,9 @@ using Newtonsoft.Json;
 using System.Net;
 using System.Net.Http.Formatting;
 using System.Threading;
+using Microsoft.Graph;
+using Microsoft.Identity.Client;
+using System.Net.Http.Headers;
 
 namespace msgraphapp.Controllers
 {
@@ -241,33 +182,21 @@ namespace msgraphapp.Controllers
     [HttpGet]
     public ActionResult<string> Get()
     {
-      // get an access token from Graph
-      var accessToken = GetAccessToken();
+      var graphServiceClient = GetGraphClient();
 
-      // subscribe
-      using (var client = new HttpClient())
-      {
-        client.BaseAddress = new Uri("https://graph.microsoft.com");
-        client.DefaultRequestHeaders.Add("Authorization", $"bearer {accessToken}");
+      var sub = new Microsoft.Graph.Subscription();
+      sub.ChangeType = "updated";
+      sub.NotificationUrl = config.Ngrok + "/api/notifications";
+      sub.Resource = "/users";
+      sub.ExpirationDateTime = DateTime.UtcNow.AddMinutes(5);
+      sub.ClientState = "SecretClientState";
 
-        var subscription = new Subscription()
-        {
-          ChangeType = "updated",
-          NotificationUrl = config.Ngrok + "/api/notifications",
-          Resource = "/users",
-          ExpirationDateTime = DateTime.UtcNow.AddMinutes(5),
-          ClientState = "SecretClientState"
-        };
+      var newSubscription = graphServiceClient
+        .Subscriptions
+        .Request()
+        .AddAsync(sub).Result;
 
-        // POST to the graph to create the subscription
-        var response = client.PostAsJsonAsync<Subscription>("/v1.0/subscriptions", subscription).Result;
-        var responseContent = response.Content.ReadAsStringAsync().Result;
-
-        // deserialize the response
-        var subscriptionDetail = JsonConvert.DeserializeObject<Subscription>(responseContent);
-
-        return $"Subscribed. Id: {subscriptionDetail.Id}";
-      }
+      return $"Subscribed. Id: {newSubscription.Id}, Expiration: {newSubscription.ExpirationDateTime}";
     }
 
     public ActionResult<string> Post([FromQuery]string validationToken = null)
@@ -293,36 +222,45 @@ namespace msgraphapp.Controllers
           Console.WriteLine($"Received notification: '{notification.Resource}', {notification.ResourceData?.Id}");
         }
       }
+
       return Ok();
     }
 
-    private string GetAccessToken()
+    private GraphServiceClient GetGraphClient()
     {
-      var url = new Uri($"https://login.microsoftonline.com/{config.TenantId}/oauth2/v2.0/token");
-      string accessToken = "";
+      var graphClient = new GraphServiceClient(new DelegateAuthenticationProvider((requestMessage) => {
 
-      var content = new FormUrlEncodedContent(new[]
-      {
-        new KeyValuePair<string, string>("client_id", config.AppId),
-        new KeyValuePair<string, string>("client_secret", config.AppSecret),
-        new KeyValuePair<string, string>("scope", "https://graph.microsoft.com/.default"),
-        new KeyValuePair<string, string>("grant_type", "client_credentials")
-      });
+          // get an access token for Graph
+          var accessToken = GetAccessToken().Result;
 
-      using (var client = new HttpClient())
-      {
-        client.BaseAddress = new Uri("https://login.microsoftonline.com");
+          requestMessage
+              .Headers
+              .Authorization = new AuthenticationHeaderValue("bearer", accessToken);
 
-        var result = client.PostAsync($"/{config.TenantId}/oauth2/v2.0/token", content).Result;
+          return Task.FromResult(0);
+      }));
 
-        string tokenResult = result.Content.ReadAsStringAsync().Result;
-        var token = JsonConvert.DeserializeObject<GraphToken>(tokenResult);
+      return graphClient;
+    }
 
-        accessToken = token.AccessToken;
+    private async Task<string> GetAccessToken()
+    {
+        ClientCredential clientCredentials = new ClientCredential(secret: config.AppSecret);
 
-        Console.WriteLine($"Got access token: {token.AccessToken}");
-        return token.AccessToken;
-      }
+        var app = new ConfidentialClientApplication(
+            clientId: config.AppId, 
+            authority: $"https://login.microsoftonline.com/{config.TenantId}",
+            redirectUri: "https://daemon", 
+            clientCredential: clientCredentials, 
+            userTokenCache: null, 
+            appTokenCache: new TokenCache()
+        );
+
+        string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
+
+        var result = await app.AcquireTokenForClientAsync(scopes);
+
+        return result.AccessToken;
     }
   }
 }

@@ -13,40 +13,28 @@ private static Timer subscriptionTimer = null;
 [HttpGet]
 public ActionResult<string> Get()
 {
-  // get an access token from Graph
-  var accessToken = GetAccessToken();
+  var graphServiceClient = GetGraphClient();
 
-  // subscribe
-  using (var client = new HttpClient())
+  var sub = new Microsoft.Graph.Subscription();
+  sub.ChangeType = "updated";
+  sub.NotificationUrl = config.Ngrok + "/api/notifications";
+  sub.Resource = "/users";
+  sub.ExpirationDateTime = DateTime.UtcNow.AddMinutes(5);
+  sub.ClientState = "SecretClientState";
+
+  var newSubscription = graphServiceClient
+    .Subscriptions
+    .Request()
+    .AddAsync(sub).Result;
+
+  Subscriptions[newSubscription.Id] = newSubscription;
+
+  if(subscriptionTimer == null)
   {
-    client.BaseAddress = new Uri("https://graph.microsoft.com");
-    client.DefaultRequestHeaders.Add("Authorization", $"bearer {accessToken}");
-
-    var subscription = new Subscription()
-    {
-      ChangeType = "updated",
-      NotificationUrl = config.Ngrok + "/api/notifications",
-      Resource = "/users",
-      ExpirationDateTime = DateTime.UtcNow.AddMinutes(5),
-      ClientState = "SecretClientState"
-    };
-
-    // POST to the graph to create the subscription
-    var response = client.PostAsJsonAsync<Subscription>("/v1.0/subscriptions", subscription).Result;
-    var responseContent = response.Content.ReadAsStringAsync().Result;
-
-    // deserialize the response
-    var subscriptionDetail = JsonConvert.DeserializeObject<Subscription>(responseContent);
-
-    Subscriptions[subscriptionDetail.Id] = subscriptionDetail;
-
-    if(subscriptionTimer == null)
-    {
-        subscriptionTimer = new Timer(CheckSubscriptions, null, 5000, 15000);
-    }
-
-    return $"Subscribed. Id: {subscriptionDetail.Id}, Expiration: {subscriptionDetail.ExpirationDateTime}";
+      subscriptionTimer = new Timer(CheckSubscriptions, null, 5000, 15000);
   }
+
+  return $"Subscribed. Id: {newSubscription.Id}, Expiration: {newSubscription.ExpirationDateTime}";
 }
 ```
 
@@ -82,40 +70,22 @@ private void RenewSubscription(Subscription subscription)
 {
   Console.WriteLine($"Current subscription: {subscription.Id}, Expiration: {subscription.ExpirationDateTime}");
 
-  // get an access token from Graph
-  var accessToken = GetAccessToken();
+  var graphServiceClient = GetGraphClient();
 
-  // renew subscription
-  using (var client = new HttpClient())
-  {
-    client.BaseAddress = new Uri("https://graph.microsoft.com");
-    client.DefaultRequestHeaders.Add("Authorization", $"bearer {accessToken}");
+  subscription.ExpirationDateTime = DateTime.UtcNow.AddMinutes(5);
 
-    var subscriptionUpdate = new Subscription()
-    {
-      ExpirationDateTime = DateTime.UtcNow.AddMinutes(5),
-    };
+  var foo = graphServiceClient
+    .Subscriptions[subscription.Id]
+    .Request()
+    .UpdateAsync(subscription).Result;
 
-    var content = new ObjectContent<Subscription>(subscriptionUpdate, new JsonMediaTypeFormatter());
-
-    // POST to the graph to create the subscription
-    var response = client.PatchAsync($"/v1.0/subscriptions/{subscription.Id}", content).Result;
-    var responseContent = response.Content.ReadAsStringAsync().Result;
-
-    // deserialize the response
-    var subscriptionDetail = JsonConvert.DeserializeObject<Subscription>(responseContent);
-
-    // update the subscription
-    subscription.ExpirationDateTime = subscriptionDetail.ExpirationDateTime;
-
-    Console.WriteLine($"Renewed subscription: {subscription.Id}, New Expiration: {subscription.ExpirationDateTime}");
-  }
+  Console.WriteLine($"Renewed subscription: {subscription.Id}, New Expiration: {subscription.ExpirationDateTime}");
 }
 ```
 
 The `CheckSubscriptions` method is called every 15 seconds by the timer. For production use this should be set to a more reasonable value to reduce the number of unnecessary calls to Graph. The `RenewSubscription` method renews a subscription and is only called if a subscription is going to expire in the next two minutes.
 
-Select **Debug > Start debugging** to run the application. Navigate to the following url `http://localhost:5000/api/notifications` to register a new subscription.
+Select **Debug > Start debugging** to run the application. Navigate to the following url **http://localhost:5000/api/notifications** to register a new subscription. 
 
 You will see the following output in the `DEBUG OUTPUT` window of Visual Studio Code approximately every 15 seconds.  This is the timer checking the subscription for expiry.
 
