@@ -9,6 +9,10 @@ using msgraphapp.Models;
 using Newtonsoft.Json;
 using System.Net;
 using System.Net.Http.Formatting;
+using System.Threading;
+using Microsoft.Graph;
+using Microsoft.Identity.Client;
+using System.Net.Http.Headers;
 
 namespace msgraphapp.Controllers
 {
@@ -16,46 +20,33 @@ namespace msgraphapp.Controllers
   [ApiController]
   public class NotificationsController : ControllerBase
   {
+    private readonly MyConfig config;
 
-    // for production use you should store these in application settings    
-    private const string ApiUrl = "<NGROK URL>";
-    private const string TenantId = "<TENANT ID>";
-    private const string AppId = "<APP ID>";
-    private const string AppSecret = "<APP SECRET>";
+    public NotificationsController(MyConfig config)
+    {
+      this.config = config;
+    }
 
     [HttpGet]
     public ActionResult<string> Get()
     {
-      // get an access token from graph
-      var accessToken = GetAccessToken();
+      var graphServiceClient = GetGraphClient();
 
-      // subscribe
-      using (var client = new HttpClient())
-      {
-        client.BaseAddress = new Uri("https://graph.microsoft.com");
-        client.DefaultRequestHeaders.Add("Authorization", $"bearer {accessToken}");
+      var sub = new Microsoft.Graph.Subscription();
+      sub.ChangeType = "updated";
+      sub.NotificationUrl = config.Ngrok + "/api/notifications";
+      sub.Resource = "/users";
+      sub.ExpirationDateTime = DateTime.UtcNow.AddMinutes(5);
+      sub.ClientState = "SecretClientState";
 
-        var subscription = new Subscription()
-        {
-          ChangeType = "updated",
-          NotificationUrl = ApiUrl + "/api/notifications",
-          Resource = "/users",
-          ExpirationDateTime = DateTime.UtcNow + new TimeSpan(1, 0, 0, 0),
-          ClientState = "SecretClientState"
-        };
+      var newSubscription = graphServiceClient
+        .Subscriptions
+        .Request()
+        .AddAsync(sub).Result;
 
-        // POST to the graph to create the subscription
-        var response = client.PostAsJsonAsync<Subscription>("/v1.0/subscriptions", subscription).Result;
-        var responseContent = response.Content.ReadAsStringAsync().Result;
-
-        // deserialize the response
-        var subscriptionDetail = JsonConvert.DeserializeObject<Subscription>(responseContent);
-
-        return $"Subscribed. Id: {subscriptionDetail.Id}";
-      }
+      return $"Subscribed. Id: {newSubscription.Id}, Expiration: {newSubscription.ExpirationDateTime}";
     }
 
-    //POST ?validationToken={opaqueTokenCreatedByMicrosoftGraph}    [HttpPost]
     public ActionResult<string> Post([FromQuery]string validationToken = null)
     {
       // handle validation
@@ -79,36 +70,45 @@ namespace msgraphapp.Controllers
           Console.WriteLine($"Received notification: '{notification.Resource}', {notification.ResourceData?.Id}");
         }
       }
+
       return Ok();
     }
 
-    private string GetAccessToken()
+    private GraphServiceClient GetGraphClient()
     {
-      var url = new Uri($"https://login.microsoftonline.com/{TenantId}/oauth2/v2.0/token");
-      string accessToken = "";
+      var graphClient = new GraphServiceClient(new DelegateAuthenticationProvider((requestMessage) => {
 
-      var content = new FormUrlEncodedContent(new[]
-      {
-        new KeyValuePair<string, string>("client_id", AppId),
-        new KeyValuePair<string, string>("client_secret", AppSecret),
-        new KeyValuePair<string, string>("scope", "https://graph.microsoft.com/.default"),
-        new KeyValuePair<string, string>("grant_type", "client_credentials")
-      });
-       
-      using (var client = new HttpClient())
-      {
-        client.BaseAddress = new Uri("https://login.microsoftonline.com");
+          // get an access token for Graph
+          var accessToken = GetAccessToken().Result;
 
-        var result = client.PostAsync($"/{TenantId}/oauth2/v2.0/token", content).Result;
+          requestMessage
+              .Headers
+              .Authorization = new AuthenticationHeaderValue("bearer", accessToken);
 
-        string tokenResult = result.Content.ReadAsStringAsync().Result;
-        var token = JsonConvert.DeserializeObject<GraphToken>(tokenResult);
+          return Task.FromResult(0);
+      }));
 
-        accessToken = token.AccessToken;
+      return graphClient;
+    }
 
-        Console.WriteLine($"Got access token: {token.AccessToken}");
-        return token.AccessToken;
-      }
+    private async Task<string> GetAccessToken()
+    {
+        ClientCredential clientCredentials = new ClientCredential(secret: config.AppSecret);
+
+        var app = new ConfidentialClientApplication(
+            clientId: config.AppId, 
+            authority: $"https://login.microsoftonline.com/{config.TenantId}",
+            redirectUri: "https://daemon", 
+            clientCredential: clientCredentials, 
+            userTokenCache: null, 
+            appTokenCache: new TokenCache()
+        );
+
+        string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
+
+        var result = await app.AcquireTokenForClientAsync(scopes);
+
+        return result.AccessToken;
     }
   }
 }

@@ -10,6 +10,9 @@ using Newtonsoft.Json;
 using System.Net;
 using System.Net.Http.Formatting;
 using System.Threading;
+using Microsoft.Graph;
+using Microsoft.Identity.Client;
+using System.Net.Http.Headers;
 
 namespace msgraphapp.Controllers
 {
@@ -17,12 +20,12 @@ namespace msgraphapp.Controllers
   [ApiController]
   public class NotificationsController : ControllerBase
   {
+    private readonly MyConfig config;
 
-    // for production use you should store these in application settings    
-    private const string ApiUrl = "<NGROK URL>";
-    private const string TenantId = "<TENANT ID>";
-    private const string AppId = "<APP ID>";
-    private const string AppSecret = "<APP SECRET>";
+    public NotificationsController(MyConfig config)
+    {
+      this.config = config;
+    }
 
     private static Dictionary<string, Subscription> Subscriptions = new Dictionary<string, Subscription>();
     private static Timer subscriptionTimer = null;
@@ -30,105 +33,75 @@ namespace msgraphapp.Controllers
     [HttpGet]
     public ActionResult<string> Get()
     {
-      // get an access token from graph
-      var accessToken = GetAccessToken();
+        var graphServiceClient = GetGraphClient();
 
-      // subscribe
-      using (var client = new HttpClient())
-      {
-        client.BaseAddress = new Uri("https://graph.microsoft.com");
-        client.DefaultRequestHeaders.Add("Authorization", $"bearer {accessToken}");
+        var sub = new Microsoft.Graph.Subscription();
+        sub.ChangeType = "updated";
+        sub.NotificationUrl = config.Ngrok + "/api/notifications";
+        sub.Resource = "/users";
+        sub.ExpirationDateTime = DateTime.UtcNow.AddMinutes(5);
+        sub.ClientState = "SecretClientState";
 
-        var subscription = new Subscription()
-        {
-          ChangeType = "updated",
-          NotificationUrl = ApiUrl + "/api/notifications",
-          Resource = "/users",
-          ExpirationDateTime = DateTime.UtcNow.AddMinutes(5),
-          ClientState = "SecretClientState"
-        };
+        var newSubscription = graphServiceClient
+            .Subscriptions
+            .Request()
+            .AddAsync(sub).Result;
 
-        // POST to the graph to create the subscription
-        var response = client.PostAsJsonAsync<Subscription>("/v1.0/subscriptions", subscription).Result;
-        var responseContent = response.Content.ReadAsStringAsync().Result;
-
-        // deserialize the response
-        var subscriptionDetail = JsonConvert.DeserializeObject<Subscription>(responseContent);
-
-        Subscriptions[subscriptionDetail.Id] = subscriptionDetail;
+        Subscriptions[newSubscription.Id] = newSubscription;
 
         if(subscriptionTimer == null)
         {
             subscriptionTimer = new Timer(CheckSubscriptions, null, 5000, 15000);
         }
 
-        return $"Subscribed. Id: {subscriptionDetail.Id}, Expiration: {subscriptionDetail.ExpirationDateTime}";
-      }
+        return $"Subscribed. Id: {newSubscription.Id}, Expiration: {newSubscription.ExpirationDateTime}";
     }
 
     private void CheckSubscriptions(Object stateInfo)
     {
-      AutoResetEvent autoEvent = (AutoResetEvent)stateInfo;
+    AutoResetEvent autoEvent = (AutoResetEvent)stateInfo;
 
-      Console.WriteLine($"Checking subscriptions {DateTime.Now.ToString("h:mm:ss.fff")}");
-      Console.WriteLine($"Current subscription count {Subscriptions.Count()}");
+    Console.WriteLine($"Checking subscriptions {DateTime.Now.ToString("h:mm:ss.fff")}");
+    Console.WriteLine($"Current subscription count {Subscriptions.Count()}");
 
-      foreach(var subscription in Subscriptions)
-      {
+    foreach(var subscription in Subscriptions)
+    {
         // if the subscription expires in the next 2 min, renew it
         if(subscription.Value.ExpirationDateTime < DateTime.UtcNow.AddMinutes(2))
         {
-          RenewSubscription(subscription.Value);
+        RenewSubscription(subscription.Value);
         }
-      }
+    }
     }
 
     private void RenewSubscription(Subscription subscription)
     {
-      Console.WriteLine($"Current subscription: {subscription.Id}, Expiration: {subscription.ExpirationDateTime}");
+    Console.WriteLine($"Current subscription: {subscription.Id}, Expiration: {subscription.ExpirationDateTime}");
 
-      // get an access token from graph
-      var accessToken = GetAccessToken();
+    var graphServiceClient = GetGraphClient();
 
-      // renew subscription
-      using (var client = new HttpClient())
-      {
-        client.BaseAddress = new Uri("https://graph.microsoft.com");
-        client.DefaultRequestHeaders.Add("Authorization", $"bearer {accessToken}");
+    subscription.ExpirationDateTime = DateTime.UtcNow.AddMinutes(5);
 
-        var subscriptionUpdate = new Subscription()
-        {
-          ExpirationDateTime = DateTime.UtcNow.AddMinutes(5),
-        };
+    var foo = graphServiceClient
+        .Subscriptions[subscription.Id]
+        .Request()
+        .UpdateAsync(subscription).Result;
 
-        var content = new ObjectContent<Subscription>(subscriptionUpdate, new JsonMediaTypeFormatter());
-
-        // POST to the graph to create the subscription
-        var response = client.PatchAsync($"/v1.0/subscriptions/{subscription.Id}", content).Result;
-        var responseContent = response.Content.ReadAsStringAsync().Result;
-
-        // deserialize the response
-        var subscriptionDetail = JsonConvert.DeserializeObject<Subscription>(responseContent);
-
-        // update the subscription
-        subscription.ExpirationDateTime = subscriptionDetail.ExpirationDateTime;
-
-        Console.WriteLine($"Renewed subscription: {subscription.Id}, New Expiration: {subscription.ExpirationDateTime}");
-      }
+    Console.WriteLine($"Renewed subscription: {subscription.Id}, New Expiration: {subscription.ExpirationDateTime}");
     }
 
     public ActionResult<string> Post([FromQuery]string validationToken = null)
     {
-      // handle validation
-      if(!string.IsNullOrEmpty(validationToken))
-      {
+    // handle validation
+    if(!string.IsNullOrEmpty(validationToken))
+    {
         Console.WriteLine($"Received Token: '{validationToken}'");
         return Ok(validationToken);
-      }
+    }
 
-      // handle notifications
-      using (StreamReader reader = new StreamReader(Request.Body))
-      {
+    // handle notifications
+    using (StreamReader reader = new StreamReader(Request.Body))
+    {
         string content = reader.ReadToEnd();
 
         Console.WriteLine(content);
@@ -137,101 +110,112 @@ namespace msgraphapp.Controllers
 
         foreach(var notification in notifications.Items)
         {
-          Console.WriteLine($"Received notification: '{notification.Resource}', {notification.ResourceData?.Id}");
+        Console.WriteLine($"Received notification: '{notification.Resource}', {notification.ResourceData?.Id}");
         }
-      }
-
-      // use deltaquery to query for all updates
-      CheckForUpdates();
-
-      return Ok();
     }
 
-    private static string DeltaLink = null;
+    // use deltaquery to query for all updates
+    CheckForUpdates();
+
+    return Ok();
+    }
+
+    private static object DeltaLink = null;
+
+    private static IUserDeltaCollectionPage lastPage = null;
 
     private void CheckForUpdates()
     {
-      var uri = "";
+      var graphClient = GetGraphClient();
 
-      // get an access token from graph
-      var accessToken = GetAccessToken();
+      // get a page of users
+      var users = GetUsers(graphClient, DeltaLink);
 
-      if(string.IsNullOrEmpty(DeltaLink))
+      OutputUsers(users);
+
+      // go through all of the pages so that we can get the delta link on the last page.
+      while (users.NextPageRequest != null)
       {
-        uri = "https://graph.microsoft.com/v1.0/users/delta";
+        users = users.NextPageRequest.GetAsync().Result;
+        OutputUsers(users);
+      }
+
+      object deltaLink;
+
+      if (users.AdditionalData.TryGetValue("@odata.deltaLink", out deltaLink))
+      {
+        DeltaLink = deltaLink;
+      }
+    }
+
+    private void OutputUsers(IUserDeltaCollectionPage users)
+    {
+      foreach(var user in users)
+      {
+        var message = $"User: {user.Id}, {user.GivenName} {user.Surname}";
+        Console.WriteLine(message);
+      }
+    }
+
+    private IUserDeltaCollectionPage GetUsers(GraphServiceClient graphClient, object deltaLink)
+    {
+      IUserDeltaCollectionPage page;
+
+      if(lastPage == null)
+      {
+        page = graphClient
+        .Users
+        .Delta()
+        .Request()
+        .GetAsync()
+        .Result;
+
       }
       else
       {
-        uri = DeltaLink;
+        lastPage.InitializeNextPageRequest(graphClient, deltaLink.ToString());
+        page = lastPage.NextPageRequest.GetAsync().Result;
       }
 
-      Console.WriteLine($"Getting users: {uri}");
-
-      while (true)
-      {
-        var users = GetChangedUsers(uri, accessToken);
-
-        foreach(var user in users.Users)
-        {
-          Console.WriteLine($"User: {user.Id}, {user.GivenName} {user.Surname} Removed?:{user.Removed?.Reason}");
-        }
-
-        if(!string.IsNullOrEmpty(users.NextLink))
-        {
-          Console.WriteLine($"Got nextlink");
-          uri = users.NextLink;
-        }
-        else
-        {
-          DeltaLink = users.DeltaLink;
-          Console.WriteLine($"Got deltalink");
-          break;
-        }
-      }
+      lastPage = page;
+      return page;
     }
 
-    private UsersResponse GetChangedUsers(string uri, string accessToken)
+    private GraphServiceClient GetGraphClient()
     {
-      using (var client = new HttpClient())
-      {
-        client.DefaultRequestHeaders.Add("Authorization", $"bearer {accessToken}");
+      var graphClient = new GraphServiceClient(new DelegateAuthenticationProvider((requestMessage) => {
 
-        var result = client.GetAsync(uri).Result;
-        string response = result.Content.ReadAsStringAsync().Result;
+          // get an access token for Graph
+          var accessToken = GetAccessToken().Result;
 
-        var users = JsonConvert.DeserializeObject<UsersResponse>(response);
+          requestMessage
+              .Headers
+              .Authorization = new AuthenticationHeaderValue("bearer", accessToken);
 
-        return users;
-      }
+          return Task.FromResult(0);
+      }));
+
+      return graphClient;
     }
 
-    private string GetAccessToken()
+    private async Task<string> GetAccessToken()
     {
-      var url = new Uri($"https://login.microsoftonline.com/{TenantId}/oauth2/v2.0/token");
-      string accessToken = "";
+        ClientCredential clientCredentials = new ClientCredential(secret: config.AppSecret);
 
-      var content = new FormUrlEncodedContent(new[]
-      {
-        new KeyValuePair<string, string>("client_id", AppId),
-        new KeyValuePair<string, string>("client_secret", AppSecret),
-        new KeyValuePair<string, string>("scope", "https://graph.microsoft.com/.default"),
-        new KeyValuePair<string, string>("grant_type", "client_credentials")
-      });
-       
-      using (var client = new HttpClient())
-      {
-        client.BaseAddress = new Uri("https://login.microsoftonline.com");
+        var app = new ConfidentialClientApplication(
+            clientId: config.AppId, 
+            authority: $"https://login.microsoftonline.com/{config.TenantId}",
+            redirectUri: "https://daemon", 
+            clientCredential: clientCredentials, 
+            userTokenCache: null, 
+            appTokenCache: new TokenCache()
+        );
 
-        var result = client.PostAsync($"/{TenantId}/oauth2/v2.0/token", content).Result;
+        string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
 
-        string tokenResult = result.Content.ReadAsStringAsync().Result;
-        var token = JsonConvert.DeserializeObject<GraphToken>(tokenResult);
+        var result = await app.AcquireTokenForClientAsync(scopes);
 
-        accessToken = token.AccessToken;
-
-        Console.WriteLine($"Got access token: {token.AccessToken}");
-        return token.AccessToken;
-      }
+        return result.AccessToken;
     }
   }
 }
