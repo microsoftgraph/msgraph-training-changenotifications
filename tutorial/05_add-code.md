@@ -109,10 +109,10 @@ Open the **Startup.cs** file and replace the contents with the following.
 ```csharp
 public void ConfigureServices(IServiceCollection services)
 {
-  services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-   var config = new MyConfig();
-  Configuration.Bind("MyConfig", config);
-  services.AddSingleton(config);
+    services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+    var config = new MyConfig();
+    Configuration.Bind("MyConfig", config);
+    services.AddSingleton(config);
 }
 ```
 
@@ -137,8 +137,8 @@ Open the **appsettings.json** file and replace the content the following.
 
 Replace the following variables with the values you copied earlier:
 
-    - `<NGROK URL>` should be set to the https ngrok url you copied earlier. 
-    - `<TENANT ID>` should be your Office 365 tenant id, for example. **contoso.onmicrosoft.com**. 
+    - `<NGROK URL>` should be set to the https ngrok url you copied earlier.
+    - `<TENANT ID>` should be your Office 365 tenant id, for example. **contoso.onmicrosoft.com**.
     - `<APP ID>` and `<APP SECRET>` should be the application id and secret you copied earlier when you created the application registration.
 
 ### Add notification controller
@@ -248,11 +248,11 @@ namespace msgraphapp.Controllers
         ClientCredential clientCredentials = new ClientCredential(secret: config.AppSecret);
 
         var app = new ConfidentialClientApplication(
-            clientId: config.AppId, 
+            clientId: config.AppId,
             authority: $"https://login.microsoftonline.com/{config.TenantId}",
-            redirectUri: "https://daemon", 
-            clientCredential: clientCredentials, 
-            userTokenCache: null, 
+            redirectUri: "https://daemon",
+            clientCredential: clientCredentials,
+            userTokenCache: null,
             appTokenCache: new TokenCache()
         );
 

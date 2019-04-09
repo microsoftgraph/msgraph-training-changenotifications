@@ -4,7 +4,7 @@
 
 In order for the Microsoft Graph to send notifications to your application running on your development machine you need to use a tool such as ngrok to tunnel calls from the internet to your machine. Ngrok allows calls from the internet to be directed to your application running locally without needing to create firewall rules.
 
-efore you continue you should have [ngrok](https://ngrok.com) installed on your development machine. If you do not have ngrok, visit the previous link for download options and instructions.
+Before you continue you should have [ngrok](https://ngrok.com) installed on your development machine. If you do not have ngrok, visit the previous link for download options and instructions.
 
 Once installed, run ngrok.
 
