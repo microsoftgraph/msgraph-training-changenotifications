@@ -1,0 +1,12 @@
+.DS_Store
+
+bin/
+obj/
+
+./.vscode/*
+!./.vscode/settings.json
+!./.vscode/tasks.json
+!./.vscode/launch.json
+!./.vscode/extensions.json
+
+appsettings.json
