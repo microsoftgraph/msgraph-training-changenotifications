@@ -1,7 +1,5 @@
 <!-- markdownlint-disable MD002 MD041 -->
 
-### Create the .NET Core project
-
 Open your command prompt, navigate to a directory where you have rights to create files, and run the following commands to create a new .NET Core WebApi app.
 
 ```shell

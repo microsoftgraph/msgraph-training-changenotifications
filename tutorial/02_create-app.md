@@ -1,6 +1,6 @@
 <!-- markdownlint-disable MD002 MD041 -->
 
-### Register and grant consent to the application in Microsoft Graph
+In this exercise, you will create a new Azure AD web application registration using the Azure Active Directory admin center and grant administrator consent to the required permission scopes.
 
 1. Open a browser and navigate to the [Azure Active Directory admin center](https://portal.azure.com). Login using a **Work or School Account**.
 
