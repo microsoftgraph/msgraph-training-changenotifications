@@ -1,7 +1,5 @@
 <!-- markdownlint-disable MD002 MD041 -->
 
-### Run the application
-
 Select **Debug > Start debugging** to run the application. After building the application a browser window will open to a 404 page. This is ok since our application is an API and not a webpage.
 
 To subscribe for change notifications for users navigate to the following url `http://localhost:5000/api/notifications`. If successful you will see output that includes a subscription id like the one below:

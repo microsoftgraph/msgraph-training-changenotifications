@@ -4,4 +4,4 @@ You've completed the Microsoft Graph – Change Notifications and Track Changes 
 
 ## Feedback
 
-Please provide any feedback on this tutorial in the [GitHub repository](https://github.com/microsoftgraph/<TODO>).
+Please provide any feedback on this tutorial in the [GitHub repository](https://github.com/microsoftgraph/msgraph-training-changenotifications).
