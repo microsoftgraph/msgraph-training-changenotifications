@@ -1,7 +1,5 @@
 <!-- markdownlint-disable MD002 MD041 -->
 
-### Manage notification subscriptions
-
 Subscriptions for notifications expire and need to be renewed periodically.
 
 Open **NotificationsController.cs** and replace the `Get()` method with the following code:
@@ -85,7 +83,7 @@ private void RenewSubscription(Subscription subscription)
 
 The `CheckSubscriptions` method is called every 15 seconds by the timer. For production use this should be set to a more reasonable value to reduce the number of unnecessary calls to Graph. The `RenewSubscription` method renews a subscription and is only called if a subscription is going to expire in the next two minutes.
 
-Select **Debug > Start debugging** to run the application. Navigate to the following url **http://localhost:5000/api/notifications** to register a new subscription. 
+Select **Debug > Start debugging** to run the application. Navigate to the following url `*http://localhost:5000/api/notifications` to register a new subscription.
 
 You will see the following output in the `DEBUG OUTPUT` window of Visual Studio Code approximately every 15 seconds.  This is the timer checking the subscription for expiry.
 
