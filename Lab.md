@@ -16,7 +16,7 @@ In this lab you will create a .NET Core console application that receives change
 
 ## Prerequisites
 
-Before you start this tutorial, you should have [.NET Core 2.2 SDK](https://dotnet.microsoft.com/download) and [Visual Studio Code](https://code.visualstudio.com/) installed on your development machine. If you do not have them installed, visit the previous links for download options.
+Before you start this tutorial, you should have [.NET Core 2.2 SDK](https://dotnet.microsoft.com/download) and [Visual Studio Code](https://code.visualstudio.com/) installed on your development machine. 
 
 ## Completed Exercises
 
