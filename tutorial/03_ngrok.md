@@ -4,30 +4,30 @@ In order for the Microsoft Graph to send notifications to your application runni
 
 Before you continue you should have [ngrok](https://ngrok.com) installed on your development machine. If you do not have ngrok, visit the previous link for download options and instructions.
 
-1. Run ngrok by executing the following from the command line:
+Run ngrok by executing the following from the command line:
 
-    ```shell
-    ngrok http 5000
-    ```
+```shell
+ngrok http 5000
+```
 
-    This will start ngrok and will tunnel requests from an external ngrok url to your development machine on port 5000.
+This will start ngrok and will tunnel requests from an external ngrok url to your development machine on port 5000.
 
-1. Copy the https forwarding address. In the example below that would be `https://787b8292.ngrok.io`. You will need this later.
+Copy the https forwarding address. In the example below that would be `https://787b8292.ngrok.io`. You will need this later.
 
-    > [!IMPORTANT]
-    > Each time ngrok is restarted a new address will be generated and you will need to copy it again.
+> [!IMPORTANT]
+> Each time ngrok is restarted a new address will be generated and you will need to copy it again.
 
-    ```shell
-    ngrok by @inconshreveable
+```shell
+ngrok by @inconshreveable
 
-    Session Status                online
-    Account                       ???? ???? (Plan: Free)
-    Version                       2.3.15
-    Region                        United States (us)
-    Web Interface                 http://127.0.0.1:4040
-    Forwarding                    http://787b8292.ngrok.io -> http://localhost:5000
-    Forwarding                    https://787b8292.ngrok.io -> http://localhost:5000
+Session Status                online
+Account                       ???? ???? (Plan: Free)
+Version                       2.3.15
+Region                        United States (us)
+Web Interface                 http://127.0.0.1:4040
+Forwarding                    http://787b8292.ngrok.io -> http://localhost:5000
+Forwarding                    https://787b8292.ngrok.io -> http://localhost:5000
 
-    Connections                   ttl     opn     rt1     rt5     p50     p90
-                                  0       0       0.00    0.00    0.00    0.00
-    ```
+Connections                   ttl     opn     rt1     rt5     p50     p90
+                              0       0       0.00    0.00    0.00    0.00
+```

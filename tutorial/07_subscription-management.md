@@ -2,110 +2,109 @@
 
 Subscriptions for notifications expire and need to be renewed periodically. The following steps will demonstrate how to renew notifications
 
-1. Open **Controllers > NotificationsController.cs** file
+Open **Controllers > NotificationsController.cs** file
 
-    1. Add the following two member declarations to the `NotificationsController` class:
+Add the following two member declarations to the `NotificationsController` class:
 
-        ```csharp
-        private static Dictionary<string, Subscription> Subscriptions = new Dictionary<string, Subscription>();
-        private static Timer subscriptionTimer = null;
-        ```
+```csharp
+private static Dictionary<string, Subscription> Subscriptions = new Dictionary<string, Subscription>();
+private static Timer subscriptionTimer = null;
+```
 
-    1. Add the following new methods. These will implement a background timer that will run every 15 seconds to check if subscriptions have expired. If they have, they will be renewed.
+Add the following new methods. These will implement a background timer that will run every 15 seconds to check if subscriptions have expired. If they have, they will be renewed.
 
-        ```csharp
-        private void CheckSubscriptions(Object stateInfo)
-        {
-          AutoResetEvent autoEvent = (AutoResetEvent)stateInfo;
+```csharp
+private void CheckSubscriptions(Object stateInfo)
+{
+  AutoResetEvent autoEvent = (AutoResetEvent)stateInfo;
 
-          Console.WriteLine($"Checking subscriptions {DateTime.Now.ToString("h:mm:ss.fff")}");
-          Console.WriteLine($"Current subscription count {Subscriptions.Count()}");
+  Console.WriteLine($"Checking subscriptions {DateTime.Now.ToString("h:mm:ss.fff")}");
+  Console.WriteLine($"Current subscription count {Subscriptions.Count()}");
 
-          foreach(var subscription in Subscriptions)
-          {
-            // if the subscription expires in the next 2 min, renew it
-            if(subscription.Value.ExpirationDateTime < DateTime.UtcNow.AddMinutes(2))
-            {
-              RenewSubscription(subscription.Value);
-            }
-          }
-        }
+  foreach(var subscription in Subscriptions)
+  {
+    // if the subscription expires in the next 2 min, renew it
+    if(subscription.Value.ExpirationDateTime < DateTime.UtcNow.AddMinutes(2))
+    {
+      RenewSubscription(subscription.Value);
+    }
+  }
+}
 
-        private void RenewSubscription(Subscription subscription)
-        {
-          Console.WriteLine($"Current subscription: {subscription.Id}, Expiration: {subscription.ExpirationDateTime}");
+private void RenewSubscription(Subscription subscription)
+{
+  Console.WriteLine($"Current subscription: {subscription.Id}, Expiration: {subscription.ExpirationDateTime}");
 
-          var graphServiceClient = GetGraphClient();
+  var graphServiceClient = GetGraphClient();
 
-          subscription.ExpirationDateTime = DateTime.UtcNow.AddMinutes(5);
+  subscription.ExpirationDateTime = DateTime.UtcNow.AddMinutes(5);
 
-          var foo = graphServiceClient
-            .Subscriptions[subscription.Id]
-            .Request()
-            .UpdateAsync(subscription).Result;
+  var foo = graphServiceClient
+    .Subscriptions[subscription.Id]
+    .Request()
+    .UpdateAsync(subscription).Result;
 
-          Console.WriteLine($"Renewed subscription: {subscription.Id}, New Expiration: {subscription.ExpirationDateTime}");
-        }
-        ```
+  Console.WriteLine($"Renewed subscription: {subscription.Id}, New Expiration: {subscription.ExpirationDateTime}");
+}
+```
 
-        The `CheckSubscriptions` method is called every 15 seconds by the timer. For production use this should be set to a more reasonable value to reduce the number of unnecessary calls to Microsoft Graph.
+The `CheckSubscriptions` method is called every 15 seconds by the timer. For production use this should be set to a more reasonable value to reduce the number of unnecessary calls to Microsoft Graph.
 
-        The `RenewSubscription` method renews a subscription and is only called if a subscription is going to expire in the next two minutes.
+The `RenewSubscription` method renews a subscription and is only called if a subscription is going to expire in the next two minutes.
 
-    1. Locate the method `Get()` and replace it with the following code:
+Locate the method `Get()` and replace it with the following code:
 
-        ```csharp
-        [HttpGet]
-        public ActionResult<string> Get()
-        {
-            var graphServiceClient = GetGraphClient();
+```csharp
+[HttpGet]
+public ActionResult<string> Get()
+{
+    var graphServiceClient = GetGraphClient();
 
-            var sub = new Microsoft.Graph.Subscription();
-            sub.ChangeType = "updated";
-            sub.NotificationUrl = config.Ngrok + "/api/notifications";
-            sub.Resource = "/users";
-            sub.ExpirationDateTime = DateTime.UtcNow.AddMinutes(5);
-            sub.ClientState = "SecretClientState";
+    var sub = new Microsoft.Graph.Subscription();
+    sub.ChangeType = "updated";
+    sub.NotificationUrl = config.Ngrok + "/api/notifications";
+    sub.Resource = "/users";
+    sub.ExpirationDateTime = DateTime.UtcNow.AddMinutes(5);
+    sub.ClientState = "SecretClientState";
 
-            var newSubscription = graphServiceClient
-              .Subscriptions
-              .Request()
-              .AddAsync(sub).Result;
+    var newSubscription = graphServiceClient
+      .Subscriptions
+      .Request()
+      .AddAsync(sub).Result;
 
-            Subscriptions[newSubscription.Id] = newSubscription;
+    Subscriptions[newSubscription.Id] = newSubscription;
 
-            if(subscriptionTimer == null)
-            {
-                subscriptionTimer = new Timer(CheckSubscriptions, null, 5000, 15000);
-            }
+    if(subscriptionTimer == null)
+    {
+        subscriptionTimer = new Timer(CheckSubscriptions, null, 5000, 15000);
+    }
 
-            return $"Subscribed. Id: {newSubscription.Id}, Expiration: {newSubscription.ExpirationDateTime}";
-        }
-        ```
+    return $"Subscribed. Id: {newSubscription.Id}, Expiration: {newSubscription.ExpirationDateTime}";
+}
+```
 
-    1. Add the following statement after the existing `using` statements at the top of the file:
+Add the following statement after the existing `using` statements at the top of the file:
 
-        ```csharp
-        using System.Threading;
-        ```
+```csharp
+using System.Threading;
+```
 
-1. Test the changes:
-    1. Within Visual Studio Code, select **Debug > Start debugging** to run the application.
-    1. Navigate to the following url: **http://localhost:5000/api/notifications**.
+### Test the changes:
 
-        This will register a new subscription.
+Within Visual Studio Code, select **Debug > Start debugging** to run the application.
+Navigate to the following url: **http://localhost:5000/api/notifications**. This will register a new subscription.
 
-    1. In the Visual Studio Code **Debug Console** window, approximately every 15 seconds, notice the timer checking the subscription for expiration:
+In the Visual Studio Code **Debug Console** window, approximately every 15 seconds, notice the timer checking the subscription for expiration:
 
-        ```shell
-        Checking subscriptions 12:32:51.882
-        Current subscription count 1
-        ```
+```shell
+Checking subscriptions 12:32:51.882
+Current subscription count 1
+```
 
-    1. Wait a few minutes and you will see the following when the subscription needs renewing:
+Wait a few minutes and you will see the following when the subscription needs renewing:
 
-        ```shell
-        Renewed subscription: 07ca62cd-1a1b-453c-be7b-4d196b3c6b5b, New Expiration: 3/10/2019 7:43:22 PM +00:00
-        ```
+```shell
+Renewed subscription: 07ca62cd-1a1b-453c-be7b-4d196b3c6b5b, New Expiration: 3/10/2019 7:43:22 PM +00:00
+```
 
-        This indicates that the subscription was renewed and shows the new expiry time.
+This indicates that the subscription was renewed and shows the new expiry time.
