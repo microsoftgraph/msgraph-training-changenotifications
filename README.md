@@ -20,16 +20,16 @@ This module has been recorded and is available in the Office Development YouTube
 
 ## Contributors
 
-| Roles                | Author(s)                                               |
-| -------------------- | ------------------------------------------------------- |
-| Lab Manuals / Slides | Andrew Connell (Microsoft MVP, Voitanos) @andrewconnell |
-| Sponsor / Support    | Jeremy Thake (Microsoft) @jthake                        |
+|        Roles         |                                       Author(s)                                       |
+| -------------------- | ------------------------------------------------------------------------------------- |
+| Lab Manuals / Slides | Andrew Connell (Microsoft MVP, Voitanos) [@andrewconnell](//github.com/andrewconnell) |
+| Sponsor / Support    | Jeremy Thake (Microsoft) [@jthake](//github.com/jthake)                               |
 
 ## Version history
 
 | Version |      Date      |         Comments         |
 | ------- | -------------- | ------------------------ |
-| 1.2     | May 29, 2019   | Fy2019Q4 content refresh |
+| 1.2     | May 30, 2019   | Fy2019Q4 content refresh |
 | 1.1     | April 9, 2019  | Added screencast link    |
 | 1.0     | March 14, 2019 | New module submitted     |
 
