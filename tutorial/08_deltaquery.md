@@ -2,43 +2,12 @@
 
 ### Query for changes
 
-Microsoft Graph offers the ability to query for changes to a particular resource since you last called it. Using this combined with Change Notifications is a robust method for ensuring you don't miss any changes to the resources.
+Microsoft Graph offers the ability to query for changes to a particular resource since you last called it. Using this option, combined with Change Notifications, enables a robust pattern for ensuring you don't miss any changes to the resources.
 
-Open **NotificationsController.cs** and replace the `Post` method with the following code:
+Locate and open the following controller: **Controllers > NotificationsController.cs**.
+Add the following code to the existing `NotificationsController` class.
 
-```csharp
-public ActionResult<string> Post([FromQuery]string validationToken = null)
-{
-  // handle validation
-  if(!string.IsNullOrEmpty(validationToken))
-  {
-    Console.WriteLine($"Received Token: '{validationToken}'");
-    return Ok(validationToken);
-  }
-
-  // handle notifications
-  using (StreamReader reader = new StreamReader(Request.Body))
-  {
-    string content = reader.ReadToEnd();
-
-    Console.WriteLine(content);
-
-    var notifications = JsonConvert.DeserializeObject<Notifications>(content);
-
-    foreach(var notification in notifications.Items)
-    {
-      Console.WriteLine($"Received notification: '{notification.Resource}', {notification.ResourceData?.Id}");
-    }
-  }
-
-  // use deltaquery to query for all updates
-  CheckForUpdates();
-
-  return Ok();
-}
-```
-
-The `Post` method will now call `CheckForUpdates` when a notification is received. Below the `Post` method add the following two new methods:
+This code includes a new method, `CheckForUpdates()`, that will call the Microsoft Graph using the delta url and then pages through the results until it finds a new `deltalink` on the final page of results. It stores the url in memory until the code is notified again when another notification is triggered.
 
 ```csharp
 private static object DeltaLink = null;
@@ -57,15 +26,15 @@ private void CheckForUpdates()
   // go through all of the pages so that we can get the delta link on the last page.
   while (users.NextPageRequest != null)
   {
-      users = users.NextPageRequest.GetAsync().Result;
-      OutputUsers(users);
+    users = users.NextPageRequest.GetAsync().Result;
+    OutputUsers(users);
   }
 
   object deltaLink;
 
   if (users.AdditionalData.TryGetValue("@odata.deltaLink", out deltaLink))
   {
-      DeltaLink = deltaLink;
+    DeltaLink = deltaLink;
   }
 }
 
@@ -103,19 +72,57 @@ private IUserDeltaCollectionPage GetUsers(GraphServiceClient graphClient, object
 }
 ```
 
-The `CheckForUpdates` method calls the graph using the delta url and then pages through the results until it finds a new `deltalink` on the final page of results. It stores the url in memory until the code is notified again when another notification is triggered.
+Locate the existing `Post()` method and replace it with the following code:
+
+```csharp
+public ActionResult<string> Post([FromQuery]string validationToken = null)
+{
+  // handle validation
+  if(!string.IsNullOrEmpty(validationToken))
+  {
+    Console.WriteLine($"Received Token: '{validationToken}'");
+    return Ok(validationToken);
+  }
+
+  // handle notifications
+  using (StreamReader reader = new StreamReader(Request.Body))
+  {
+    string content = reader.ReadToEnd();
+
+    Console.WriteLine(content);
+
+    var notifications = JsonConvert.DeserializeObject<Notifications>(content);
+
+    foreach(var notification in notifications.Items)
+    {
+      Console.WriteLine($"Received notification: '{notification.Resource}', {notification.ResourceData?.Id}");
+    }
+  }
+
+  // use deltaquery to query for all updates
+  CheckForUpdates();
+
+  return Ok();
+}
+```
+
+The `Post` method will now call `CheckForUpdates` when a notification is received. Below the `Post` method add the following two new methods:
 
 **Save** all files.
 
-Select **Debug > Start debugging** to run the application. After building the application a browser window will open to a 404 page. This is ok since our application is an API and not a webpage.
+### Test your changes:
 
-To subscribe for change notifications for users navigate to the following url `http://localhost:5000/api/notifications`.
+Within Visual Studio Code, select **Debug > Start debugging** to run the application.
+Navigate to the following url: **http://localhost:5000/api/notifications**. This will register a new subscription.
 
-Open a browser and visit the [Microsoft 365 admin center](https://admin.microsoft.com/AdminPortal). Sign-in using an administrator account. Select **Users > Active users**. Select an active user and select **Edit** for their **Contact information**. Update the **Mobile phone** value with a new number and Select **Save**.
+Open a browser and navigate to the [Microsoft 365 admin center (https://admin.microsoft.com/AdminPortal)](https://admin.microsoft.com/AdminPortal).
 
-![Screen shot of user details](./images/10.png)
+1. If prompted to login, sign-in using an admin account.
+1. Select **Users > Active users**. 
+1. Select an active user and select **Edit** for their **Contact information**. 
+1. Update the **Mobile phone** value with a new number and Select **Save**.
 
-Wait for the notification to be received as indicated in the **DEBUG CONSOLE** as follows:
+Wait for the notification to be received as indicated in the Visual Studio Code **Debug Console**:
 
 ```shell
 Received notification: 'Users/7a7fded6-0269-42c2-a0be-512d58da4463', 7a7fded6-0269-42c2-a0be-512d58da4463
@@ -156,7 +163,7 @@ User: d4e3a3e0-72e9-41a6-9538-c23e10a16122,   Removed?:deleted
 Got deltalink
 ```
 
-In the user management portal edit the user again and **Save** again using a different mobile phone number.
+In the Microsoft 365 Admin Portal, repeat the process of editing a user and **Save** again.
 
 The application will receive another notification and will query the graph again using the last delta link it received. However, this time you will notice that only the modified user was returned in the results.
 

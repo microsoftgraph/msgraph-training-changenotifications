@@ -26,7 +26,6 @@ namespace msgraphapp
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-
             var config = new MyConfig();
             Configuration.Bind("MyConfig", config);
             services.AddSingleton(config);
@@ -45,7 +44,7 @@ namespace msgraphapp
                 app.UseHsts();
             }
 
-            //app.UseHttpsRedirection();
+            // app.UseHttpsRedirection();
             app.UseMvc();
         }
     }
