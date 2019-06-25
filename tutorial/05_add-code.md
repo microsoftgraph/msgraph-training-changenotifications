@@ -11,6 +11,7 @@ Open the **Startup.cs** file and comment out the following line to disable ssl r
 The application uses several new model classes for (de)serialization of messages to/from the Microsoft Graph.
 
 Right-click in the project file tree and select **New Folder**. Name it **Models**
+
 Right-click the **Models** folder and add three new files:
 
 - **Notification.cs**
@@ -104,7 +105,7 @@ namespace msgraphapp
 }
 ```
 
-Open the **Startup.cs** file and replace the contents with the following.
+Open the **Startup.cs** file. Locate the method `ConfigureServices()` method & replace it with the following code:
 
 ```csharp
 public void ConfigureServices(IServiceCollection services)
@@ -137,9 +138,9 @@ Open the **appsettings.json** file and replace the content the following.
 
 Replace the following variables with the values you copied earlier:
 
-    - `<NGROK URL>` should be set to the https ngrok url you copied earlier.
-    - `<TENANT ID>` should be your Office 365 tenant id, for example. **contoso.onmicrosoft.com**.
-    - `<APP ID>` and `<APP SECRET>` should be the application id and secret you copied earlier when you created the application registration.
+- `<NGROK URL>` should be set to the https ngrok url you copied earlier.
+- `<TENANT ID>` should be your Office 365 tenant id, for example: **contoso.onmicrosoft.com**.
+- `<APP ID>` and `<APP SECRET>` should be the application id and secret you copied earlier when you created the application registration.
 
 ### Add notification controller
 
@@ -147,7 +148,7 @@ The application requires a new controller to process the subscription and notifi
 
 Right-click the `Controllers` folder, select **New File**, and name the controller **NotificationsController.cs**.
 
-Replace the contents of **NotificationController.cs** with the following:
+Replace the contents of **NotificationController.cs** with the following code:
 
 ```csharp
 using System;
@@ -245,23 +246,19 @@ namespace msgraphapp.Controllers
 
     private async Task<string> GetAccessToken()
     {
-        ClientCredential clientCredentials = new ClientCredential(secret: config.AppSecret);
+      IConfidentialClientApplication app = ConfidentialClientApplicationBuilder.Create(config.AppId)
+        .WithClientSecret(config.AppSecret)
+        .WithAuthority($"https://login.microsoftonline.com/{config.TenantId}")
+        .WithRedirectUri("https://daemon")
+        .Build();
 
-        var app = new ConfidentialClientApplication(
-            clientId: config.AppId,
-            authority: $"https://login.microsoftonline.com/{config.TenantId}",
-            redirectUri: "https://daemon",
-            clientCredential: clientCredentials,
-            userTokenCache: null,
-            appTokenCache: new TokenCache()
-        );
+      string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
 
-        string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
+      var result = await app.AcquireTokenForClient(scopes).ExecuteAsync();
 
-        var result = await app.AcquireTokenForClientAsync(scopes);
-
-        return result.AccessToken;
+      return result.AccessToken;
     }
+
   }
 }
 ```
