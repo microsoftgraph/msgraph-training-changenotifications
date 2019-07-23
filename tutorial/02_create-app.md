@@ -49,7 +49,7 @@ In this exercise, you will create a new Azure AD web application registration us
 
     ![Screenshot selecting the Microsoft Graph service](./images/aad-portal-newapp-graphscope.png)
 
-    Select **Application Permission**, expand the **User** group and select **User.ReadWrite.All** scope.
+    Select **Application Permission**, expand the **User** group and select **User.Read.All** scope.
 
     Select **Add permissions** to save your changes.
 
@@ -57,7 +57,7 @@ In this exercise, you will create a new Azure AD web application registration us
 
     ![Screenshot of the newly added client secret](./images/aad-portal-newapp-graphscope-03.png)
 
-The application requests an application permission with the **User.ReadWrite.All** scope. This permission requires administrative consent.
+The application requests an application permission with the **User.Read.All** scope. This permission requires administrative consent.
 
 Select **Grant admin consent for Contoso**, then select **Yes** to consent this application and grant the application access to your tenant using the scopes you specified.
 
