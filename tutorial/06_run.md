@@ -16,15 +16,16 @@ When prompted to select an environment, select **.NET Core**.
 Update the Visual Studio debugger launch configuration:
 
   1. In Visual Studio Code, open the file **.vscode/launch.json**.
-  1. Locate the following section in the default configuration:
+  1. Delete the following section in the default configuration:
 
       ```json
-      "launchBrowser": {
-        "enabled": true
+      // Enable launching a web browser when ASP.NET Core starts. For more information: https://aka.ms/VSCode-CS-LaunchJson-WebBrowser
+      "serverReadyAction": {
+          "action": "openExternally",
+          "pattern": "^\\s*Now listening on:\\s+(https?://\\S+)"                
       },
       ```
 
-  1. Set the `enabled` property to `false`.
   1. Save your changes.
 
 ### Test the application:
