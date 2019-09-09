@@ -1,4 +1,4 @@
-# Completed module: Create and run the .NET Core project
+# Completed module: Manage notification subscriptions
 
 The version of the project in this directory reflects completing the tutorial up through [Manage notification subscriptions](../../tutorial/07_subscription-management.md). If you use this version of the project, you need to complete the rest of the tutorial starting at [Manage notification subscriptions](../../tutorial/08_deltaquery.md).
 
