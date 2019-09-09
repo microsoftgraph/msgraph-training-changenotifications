@@ -31,19 +31,23 @@ private void CheckSubscriptions(Object stateInfo)
   }
 }
 
-private void RenewSubscription(Subscription subscription)
+private async void RenewSubscription(Subscription subscription)
 {
   Console.WriteLine($"Current subscription: {subscription.Id}, Expiration: {subscription.ExpirationDateTime}");
 
   var graphServiceClient = GetGraphClient();
 
-  subscription.ExpirationDateTime = DateTime.UtcNow.AddMinutes(5);
+  var newSubscription = new Subscription
+  {
+    ExpirationDateTime = DateTime.UtcNow.AddMinutes(5)
+  };     
 
-  var foo = graphServiceClient
+  await graphServiceClient
     .Subscriptions[subscription.Id]
     .Request()
-    .UpdateAsync(subscription).Result;
+    .UpdateAsync(newSubscription);
 
+  subscription.ExpirationDateTime = newSubscription.ExpirationDateTime;
   Console.WriteLine($"Renewed subscription: {subscription.Id}, New Expiration: {subscription.ExpirationDateTime}");
 }
 ```
@@ -81,12 +85,6 @@ public ActionResult<string> Get()
 
     return $"Subscribed. Id: {newSubscription.Id}, Expiration: {newSubscription.ExpirationDateTime}";
 }
-```
-
-Add the following statement after the existing `using` statements at the top of the file:
-
-```csharp
-using System.Threading;
 ```
 
 ### Test the changes:
