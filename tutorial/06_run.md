@@ -40,7 +40,7 @@ Once you see the following in the **Debug Console** window...
 
 ![Screenshot of a successful subscription](./images/vscode-debugapp-04.png)
 
-Your application is now subscribed to receive notifications from the Microsoft Graph when an update is made on any users in the Office 365 tenant.
+Your application is now subscribed to receive notifications from the Microsoft Graph when an update is made on any user in the Office 365 tenant.
 
 Trigger a notification:
 
