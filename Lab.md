@@ -20,4 +20,4 @@ Before you start this tutorial, you should have [.NET Core 2.2 SDK](https://dotn
 
 ## Completed Exercises
 
-Finished solutions are provided in the [Demos](./Demos) folder if you get stuck.
+Finished solutions are provided in the [Demos](./demos) folder if you get stuck.
