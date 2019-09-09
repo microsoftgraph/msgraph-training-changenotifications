@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,7 +16,6 @@ using System.Threading;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
 using System.Net.Http.Headers;
-using System.Threading;
 
 namespace msgraphapp.Controllers
 {
@@ -22,46 +24,45 @@ namespace msgraphapp.Controllers
   public class NotificationsController : ControllerBase
   {
     private readonly MyConfig config;
+    private static Dictionary<string, Subscription> Subscriptions = new Dictionary<string, Subscription>();
+    private static Timer subscriptionTimer = null;
 
     public NotificationsController(MyConfig config)
     {
       this.config = config;
     }
 
-    private static Dictionary<string, Subscription> Subscriptions = new Dictionary<string, Subscription>();
-    private static Timer subscriptionTimer = null;
-
     [HttpGet]
     public ActionResult<string> Get()
     {
-      var graphServiceClient = GetGraphClient();
+        var graphServiceClient = GetGraphClient();
 
-      var sub = new Microsoft.Graph.Subscription();
-      sub.ChangeType = "updated";
-      sub.NotificationUrl = config.Ngrok + "/api/notifications";
-      sub.Resource = "/users";
-      sub.ExpirationDateTime = DateTime.UtcNow.AddMinutes(5);
-      sub.ClientState = "SecretClientState";
+        var sub = new Microsoft.Graph.Subscription();
+        sub.ChangeType = "updated";
+        sub.NotificationUrl = config.Ngrok + "/api/notifications";
+        sub.Resource = "/users";
+        sub.ExpirationDateTime = DateTime.UtcNow.AddMinutes(5);
+        sub.ClientState = "SecretClientState";
 
-      var newSubscription = graphServiceClient
-        .Subscriptions
-        .Request()
-        .AddAsync(sub).Result;
+        var newSubscription = graphServiceClient
+          .Subscriptions
+          .Request()
+          .AddAsync(sub).Result;
 
-      Subscriptions[newSubscription.Id] = newSubscription;
+        Subscriptions[newSubscription.Id] = newSubscription;
 
-      if (subscriptionTimer == null)
-      {
-        subscriptionTimer = new Timer(CheckSubscriptions, null, 5000, 15000);
-      }
+        if(subscriptionTimer == null)
+        {
+            subscriptionTimer = new Timer(CheckSubscriptions, null, 5000, 15000);
+        }
 
-      return $"Subscribed. Id: {newSubscription.Id}, Expiration: {newSubscription.ExpirationDateTime}";
+        return $"Subscribed. Id: {newSubscription.Id}, Expiration: {newSubscription.ExpirationDateTime}";
     }
 
     public ActionResult<string> Post([FromQuery]string validationToken = null)
     {
       // handle validation
-      if (!string.IsNullOrEmpty(validationToken))
+      if(!string.IsNullOrEmpty(validationToken))
       {
         Console.WriteLine($"Received Token: '{validationToken}'");
         return Ok(validationToken);
@@ -76,7 +77,7 @@ namespace msgraphapp.Controllers
 
         var notifications = JsonConvert.DeserializeObject<Notifications>(content);
 
-        foreach (var notification in notifications.Items)
+        foreach(var notification in notifications.Items)
         {
           Console.WriteLine($"Received notification: '{notification.Resource}', {notification.ResourceData?.Id}");
         }
@@ -87,16 +88,16 @@ namespace msgraphapp.Controllers
 
     private GraphServiceClient GetGraphClient()
     {
-      var graphClient = new GraphServiceClient(new DelegateAuthenticationProvider((requestMessage) =>
-      {
-        // get an access token for Graph
-        var accessToken = GetAccessToken().Result;
+      var graphClient = new GraphServiceClient(new DelegateAuthenticationProvider((requestMessage) => {
 
-        requestMessage
-            .Headers
-            .Authorization = new AuthenticationHeaderValue("bearer", accessToken);
+          // get an access token for Graph
+          var accessToken = GetAccessToken().Result;
 
-        return Task.FromResult(0);
+          requestMessage
+              .Headers
+              .Authorization = new AuthenticationHeaderValue("bearer", accessToken);
+
+          return Task.FromResult(0);
       }));
 
       return graphClient;
@@ -124,29 +125,33 @@ namespace msgraphapp.Controllers
       Console.WriteLine($"Checking subscriptions {DateTime.Now.ToString("h:mm:ss.fff")}");
       Console.WriteLine($"Current subscription count {Subscriptions.Count()}");
 
-      foreach (var subscription in Subscriptions)
+      foreach(var subscription in Subscriptions)
       {
         // if the subscription expires in the next 2 min, renew it
-        if (subscription.Value.ExpirationDateTime < DateTime.UtcNow.AddMinutes(2))
+        if(subscription.Value.ExpirationDateTime < DateTime.UtcNow.AddMinutes(2))
         {
           RenewSubscription(subscription.Value);
         }
       }
     }
 
-    private void RenewSubscription(Subscription subscription)
+    private async void RenewSubscription(Subscription subscription)
     {
       Console.WriteLine($"Current subscription: {subscription.Id}, Expiration: {subscription.ExpirationDateTime}");
 
       var graphServiceClient = GetGraphClient();
 
-      subscription.ExpirationDateTime = DateTime.UtcNow.AddMinutes(5);
+      var newSubscription = new Subscription
+      {
+        ExpirationDateTime = DateTime.UtcNow.AddMinutes(5)
+      };     
 
-      var foo = graphServiceClient
+      await graphServiceClient
         .Subscriptions[subscription.Id]
         .Request()
-        .UpdateAsync(subscription).Result;
+        .UpdateAsync(newSubscription);
 
+      subscription.ExpirationDateTime = newSubscription.ExpirationDateTime;
       Console.WriteLine($"Renewed subscription: {subscription.Id}, New Expiration: {subscription.ExpirationDateTime}");
     }
   }
