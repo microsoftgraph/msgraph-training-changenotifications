@@ -105,7 +105,7 @@ namespace msgraphapp
 }
 ```
 
-Open the **Startup.cs** file. Locate the method `ConfigureServices()` method & replace it with the following code:
+Open the **Startup.cs** file. Locate the method `ConfigureServices()` method and replace it with the following code:
 
 ```csharp
 public void ConfigureServices(IServiceCollection services)
@@ -117,7 +117,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-Open the **appsettings.json** file and replace the content the following.
+Open the **appsettings.json** file and replace the content with the following JSON.
 
 ```json
 {
