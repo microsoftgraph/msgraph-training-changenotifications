@@ -30,7 +30,7 @@ Update the Visual Studio debugger launch configuration:
 
 ### Test the application:
 
-In Visual Studio Code, select **Debug > Start debugging** to run the application. VS Code will build and star the application.
+In Visual Studio Code, select **Debug > Start debugging** to run the application. VS Code will build and start the application.
 
 Once you see the following in the **Debug Console** window...
 
