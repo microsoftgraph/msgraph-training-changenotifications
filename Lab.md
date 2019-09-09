@@ -10,7 +10,7 @@ In this lab you will create a .NET Core console application that receives change
 1. [Create the .NET Core project](./tutorial/04_create-project.md)
 1. [Code the HTTP API](./tutorial/05_add-code.md)
 1. [Run the application](./tutorial/06_run.md)
-1. [Manage notification subscriptions](./tutorial/07_subbscription-management.md)
+1. [Manage notification subscriptions](./tutorial/07_subscription-management.md)
 1. [Query for changes](./tutorial/08_deltaquery.md)
 1. [Completed Lab](./tutorial/09_completed.md)
 
