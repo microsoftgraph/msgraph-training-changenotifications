@@ -106,7 +106,7 @@ public ActionResult<string> Post([FromQuery]string validationToken = null)
 }
 ```
 
-The `Post` method will now call `CheckForUpdates` when a notification is received. Below the `Post` method add the following two new methods:
+The `Post` method will now call `CheckForUpdates` when a notification is received. 
 
 **Save** all files.
 
@@ -160,7 +160,6 @@ User: 4887248a-6b48-4ba5-bdd5-fed89d8ea6a0,   Removed?:deleted
 User: e538b2d5-6481-4a90-a20a-21ad55ce4c1d,   Removed?:deleted
 User: bc5994d9-4404-4a14-8fb0-46b8dccca0ad,   Removed?:deleted
 User: d4e3a3e0-72e9-41a6-9538-c23e10a16122,   Removed?:deleted
-Got deltalink
 ```
 
 In the Microsoft 365 Admin Portal, repeat the process of editing a user and **Save** again.
