@@ -1,0 +1,14 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning"
+    }
+  },
+  "MyConfig":
+  {
+    "AppId": "<APP ID>",
+    "AppSecret": "<APP SECRET>",
+    "TenantId": "<TENANT ID>",
+    "Ngrok": "<NGROK URL>"
+  }
+}
