@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -36,7 +39,7 @@ namespace msgraphapp.Controllers
       sub.ChangeType = "updated";
       sub.NotificationUrl = config.Ngrok + "/api/notifications";
       sub.Resource = "/users";
-      sub.ExpirationDateTime = DateTime.UtcNow.AddMinutes(15);
+      sub.ExpirationDateTime = DateTime.UtcNow.AddMinutes(5);
       sub.ClientState = "SecretClientState";
 
       var newSubscription = graphServiceClient
@@ -50,7 +53,7 @@ namespace msgraphapp.Controllers
     public ActionResult<string> Post([FromQuery]string validationToken = null)
     {
       // handle validation
-      if (!string.IsNullOrEmpty(validationToken))
+      if(!string.IsNullOrEmpty(validationToken))
       {
         Console.WriteLine($"Received Token: '{validationToken}'");
         return Ok(validationToken);
@@ -65,7 +68,7 @@ namespace msgraphapp.Controllers
 
         var notifications = JsonConvert.DeserializeObject<Notifications>(content);
 
-        foreach (var notification in notifications.Items)
+        foreach(var notification in notifications.Items)
         {
           Console.WriteLine($"Received notification: '{notification.Resource}', {notification.ResourceData?.Id}");
         }
@@ -76,16 +79,16 @@ namespace msgraphapp.Controllers
 
     private GraphServiceClient GetGraphClient()
     {
-      var graphClient = new GraphServiceClient(new DelegateAuthenticationProvider((requestMessage) =>
-      {
-        // get an access token for Graph
-        var accessToken = GetAccessToken().Result;
+      var graphClient = new GraphServiceClient(new DelegateAuthenticationProvider((requestMessage) => {
 
-        requestMessage
-            .Headers
-            .Authorization = new AuthenticationHeaderValue("bearer", accessToken);
+          // get an access token for Graph
+          var accessToken = GetAccessToken().Result;
 
-        return Task.FromResult(0);
+          requestMessage
+              .Headers
+              .Authorization = new AuthenticationHeaderValue("bearer", accessToken);
+
+          return Task.FromResult(0);
       }));
 
       return graphClient;
@@ -105,5 +108,6 @@ namespace msgraphapp.Controllers
 
       return result.AccessToken;
     }
+
   }
 }

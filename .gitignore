@@ -1,5 +1,5 @@
 .DS_Store
-
+appsettings.json
 bin/
 obj/
 
@@ -8,5 +8,3 @@ obj/
 !./.vscode/tasks.json
 !./.vscode/launch.json
 !./.vscode/extensions.json
-
-appsettings.json

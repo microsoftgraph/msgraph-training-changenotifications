@@ -105,7 +105,7 @@ namespace msgraphapp
 }
 ```
 
-Open the **Startup.cs** file. Locate the method `ConfigureServices()` method & replace it with the following code:
+Open the **Startup.cs** file. Locate the method `ConfigureServices()` method and replace it with the following code:
 
 ```csharp
 public void ConfigureServices(IServiceCollection services)
@@ -117,7 +117,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-Open the **appsettings.json** file and replace the content the following.
+Open the **appsettings.json** file and replace the content with the following JSON.
 
 ```json
 {
@@ -139,7 +139,7 @@ Open the **appsettings.json** file and replace the content the following.
 Replace the following variables with the values you copied earlier:
 
 - `<NGROK URL>` should be set to the https ngrok url you copied earlier.
-- `<TENANT ID>` should be your Office 365 tenant id, for example: **contoso.onmicrosoft.com**.
+- `<TENANT ID>` should be your Office 365 tenant id you copied earlier.
 - `<APP ID>` and `<APP SECRET>` should be the application id and secret you copied earlier when you created the application registration.
 
 ### Add notification controller

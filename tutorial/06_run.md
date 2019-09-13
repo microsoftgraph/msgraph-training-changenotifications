@@ -16,20 +16,21 @@ When prompted to select an environment, select **.NET Core**.
 Update the Visual Studio debugger launch configuration:
 
   1. In Visual Studio Code, open the file **.vscode/launch.json**.
-  1. Locate the following section in the default configuration:
+  1. Delete the following section in the default configuration:
 
       ```json
-      "launchBrowser": {
-        "enabled": true
+      // Enable launching a web browser when ASP.NET Core starts. For more information: https://aka.ms/VSCode-CS-LaunchJson-WebBrowser
+      "serverReadyAction": {
+          "action": "openExternally",
+          "pattern": "^\\s*Now listening on:\\s+(https?://\\S+)"                
       },
       ```
 
-  1. Set the `enabled` property to `false`.
   1. Save your changes.
 
 ### Test the application:
 
-In Visual Studio Code, select **Debug > Start debugging** to run the application. VS Code will build and star the application.
+In Visual Studio Code, select **Debug > Start debugging** to run the application. VS Code will build and start the application.
 
 Once you see the following in the **Debug Console** window...
 
@@ -39,7 +40,7 @@ Once you see the following in the **Debug Console** window...
 
 ![Screenshot of a successful subscription](./images/vscode-debugapp-04.png)
 
-Your application is now subscribed to receive notifications from the Microsoft Graph when an update is made on any users in the Office 365 tenant.
+Your application is now subscribed to receive notifications from the Microsoft Graph when an update is made on any user in the Office 365 tenant.
 
 Trigger a notification:
 
