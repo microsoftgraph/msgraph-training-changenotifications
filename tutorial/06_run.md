@@ -1,19 +1,9 @@
 <!-- markdownlint-disable MD002 MD041 -->
 
-Create a launch configuration to debug the application in Visual Studio Code.
-
-Within Visual Studio Code, select **Debug > Open Configurations**.
-
-  ![Screencast of VS Code opening launch configurations](./images/vscode-debugapp-01.png)
-
-When prompted to select an environment, select **.NET Core**.
-
-  ![Screencast of VS Code creating a launch configuration for .NET Core](./images/vscode-debugapp-02.png)
+Update the Visual Studio debugger launch configuration:
 
 > [!NOTE]
 > By default, the .NET Core launch configuration will open a browser and navigate to the default URL for the application when launching the debugger. For this application, we instead want to navigate to the NGrok URL. If you leave the launch configuration as is, each time you debug the application it will display a broken page. You can just change the URL, or change the launch configuration to not launch the browser:
-
-Update the Visual Studio debugger launch configuration:
 
   1. In Visual Studio Code, open the file **.vscode/launch.json**.
   1. Delete the following section in the default configuration:

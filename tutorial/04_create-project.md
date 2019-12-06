@@ -18,15 +18,16 @@ After creating the application, run the following commands to ensure your new pr
   The application will start and output the following:
 
   ```shell
-  info: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[0] ...
-  info: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[58] ...
-  warn: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[35] ...
-  info: Microsoft.AspNetCore.DataProtection.Repositories.FileSystemXmlRepository[39] ...
-  Hosting environment: Development
-  Content root path: /Users/ac/_play/graphchangenotifications/msgraphapp
-  Now listening on: https://localhost:5001
-  Now listening on: http://localhost:5000
-  Application started. Press Ctrl+C to shut down.
+  info: Microsoft.Hosting.Lifetime[0]
+        Now listening on: https://localhost:5001
+  info: Microsoft.Hosting.Lifetime[0]
+        Now listening on: http://localhost:5000
+  info: Microsoft.Hosting.Lifetime[0]
+        Application started. Press Ctrl+C to shut down.
+  info: Microsoft.Hosting.Lifetime[0]
+        Hosting environment: Development
+  info: Microsoft.Hosting.Lifetime[0]
+        Content root path: [your file path]\msgraphapp
   ```
 
 Stop the application running by pressing <kbd>CTRL</kbd>+<kbd>C</kbd>.

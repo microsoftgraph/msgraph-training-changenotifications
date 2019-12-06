@@ -23,12 +23,14 @@ This module has been recorded and is available in the Office Development YouTube
 |        Roles         |                                       Author(s)                                       |
 | -------------------- | ------------------------------------------------------------------------------------- |
 | Lab Manuals / Slides | Andrew Connell (Microsoft MVP, Voitanos) [@andrewconnell](//github.com/andrewconnell) |
+| QA                   | Rob Windsor (Microsoft MVP, PAIT Group) [@rob-windsor](//github.com/rob-windsor)      |
 | Sponsor / Support    | Jeremy Thake (Microsoft) [@jthake](//github.com/jthake)                               |
 
 ## Version history
 
 | Version |       Date        |                     Comments                     |
 | ------- | ----------------- | ------------------------------------------------ |
+| 1.5     | December 9, 2019  | FY2020Q1 content refresh                         |
 | 1.4     | September 9, 2019 | FY2020Q1 content refresh                         |
 | 1.3     | June 18, 2019     | Updated readme to refreshed screencast recording |
 | 1.2     | May 30, 2019      | Fy2019Q4 content refresh                         |

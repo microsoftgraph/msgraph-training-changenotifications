@@ -59,6 +59,6 @@ In this exercise, you will create a new Azure AD web application registration us
 
 The application requests an application permission with the **User.Read.All** scope. This permission requires administrative consent.
 
-Select **Grant admin consent for Contoso**, then select **Yes** to consent this application and grant the application access to your tenant using the scopes you specified.
+Select **Grant admin consent for [your tenant name]**, then select **Yes** to consent this application and grant the application access to your tenant using the scopes you specified.
 
 ![Screenshot approved admin consent](./images/aad-portal-newapp-graphscope-04.png)

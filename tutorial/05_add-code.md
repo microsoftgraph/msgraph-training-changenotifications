@@ -110,7 +110,7 @@ Open the **Startup.cs** file. Locate the method `ConfigureServices()` method and
 ```csharp
 public void ConfigureServices(IServiceCollection services)
 {
-    services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+    services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
     var config = new MyConfig();
     Configuration.Bind("MyConfig", config);
     services.AddSingleton(config);
@@ -161,7 +161,6 @@ using Microsoft.AspNetCore.Mvc;
 using msgraphapp.Models;
 using Newtonsoft.Json;
 using System.Net;
-using System.Net.Http.Formatting;
 using System.Threading;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
@@ -181,7 +180,7 @@ namespace msgraphapp.Controllers
     }
 
     [HttpGet]
-    public ActionResult<string> Get()
+    public async Task<ActionResult<string>> Get()
     {
       var graphServiceClient = GetGraphClient();
 
@@ -192,15 +191,15 @@ namespace msgraphapp.Controllers
       sub.ExpirationDateTime = DateTime.UtcNow.AddMinutes(5);
       sub.ClientState = "SecretClientState";
 
-      var newSubscription = graphServiceClient
+      var newSubscription = await graphServiceClient
         .Subscriptions
         .Request()
-        .AddAsync(sub).Result;
+        .AddAsync(sub);
 
       return $"Subscribed. Id: {newSubscription.Id}, Expiration: {newSubscription.ExpirationDateTime}";
     }
 
-    public ActionResult<string> Post([FromQuery]string validationToken = null)
+    public async Task<ActionResult<string>> Post([FromQuery]string validationToken = null)
     {
       // handle validation
       if(!string.IsNullOrEmpty(validationToken))
@@ -212,7 +211,7 @@ namespace msgraphapp.Controllers
       // handle notifications
       using (StreamReader reader = new StreamReader(Request.Body))
       {
-        string content = reader.ReadToEnd();
+        string content = await reader.ReadToEndAsync();
 
         Console.WriteLine(content);
 
