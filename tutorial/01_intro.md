@@ -7,10 +7,10 @@ This tutorial teaches you how to build a .NET Core app that uses the Microsoft G
 
 ## Prerequisites
 
-Before you start this tutorial, you should have [.NET Core 2.2 SDK](https://dotnet.microsoft.com/download) and [Visual Studio Code](https://code.visualstudio.com/) installed on your development machine.
+Before you start this tutorial, you should have [.NET Core 3.1 SDK](https://dotnet.microsoft.com/download) and [Visual Studio Code](https://code.visualstudio.com/) installed on your development machine.
 
 > [!NOTE]
-> This tutorial was written with .NET Core version 2.2. The steps in this guide may work with other versions, but that has not been tested.
+> This tutorial was written with .NET Core version 3.1. The steps in this guide may work with other versions, but that has not been tested.
 
 ## Watch the tutorial
 

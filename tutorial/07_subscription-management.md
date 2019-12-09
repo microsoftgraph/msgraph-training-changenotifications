@@ -60,7 +60,7 @@ Locate the method `Get()` and replace it with the following code:
 
 ```csharp
 [HttpGet]
-public ActionResult<string> Get()
+public async Task<ActionResult<string>> Get()
 {
     var graphServiceClient = GetGraphClient();
 
@@ -71,14 +71,14 @@ public ActionResult<string> Get()
     sub.ExpirationDateTime = DateTime.UtcNow.AddMinutes(5);
     sub.ClientState = "SecretClientState";
 
-    var newSubscription = graphServiceClient
+    var newSubscription = await graphServiceClient
       .Subscriptions
       .Request()
-      .AddAsync(sub).Result;
+      .AddAsync(sub);
 
     Subscriptions[newSubscription.Id] = newSubscription;
 
-    if(subscriptionTimer == null)
+    if (subscriptionTimer == null)
     {
         subscriptionTimer = new Timer(CheckSubscriptions, null, 5000, 15000);
     }

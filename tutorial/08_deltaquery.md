@@ -14,28 +14,28 @@ private static object DeltaLink = null;
 
 private static IUserDeltaCollectionPage lastPage = null;
 
-private void CheckForUpdates()
+private async Task CheckForUpdates()
 {
-  var graphClient = GetGraphClient();
+    var graphClient = GetGraphClient();
 
-  // get a page of users
-  var users = GetUsers(graphClient, DeltaLink);
+    // get a page of users
+    var users = await GetUsers(graphClient, DeltaLink);
 
-  OutputUsers(users);
-
-  // go through all of the pages so that we can get the delta link on the last page.
-  while (users.NextPageRequest != null)
-  {
-    users = users.NextPageRequest.GetAsync().Result;
     OutputUsers(users);
-  }
 
-  object deltaLink;
+    // go through all of the pages so that we can get the delta link on the last page.
+    while (users.NextPageRequest != null)
+    {
+        users = users.NextPageRequest.GetAsync().Result;
+        OutputUsers(users);
+    }
 
-  if (users.AdditionalData.TryGetValue("@odata.deltaLink", out deltaLink))
-  {
-    DeltaLink = deltaLink;
-  }
+    object deltaLink;
+
+    if (users.AdditionalData.TryGetValue("@odata.deltaLink", out deltaLink))
+    {
+        DeltaLink = deltaLink;
+    }
 }
 
 private void OutputUsers(IUserDeltaCollectionPage users)
@@ -47,62 +47,61 @@ private void OutputUsers(IUserDeltaCollectionPage users)
     }
 }
 
-private IUserDeltaCollectionPage GetUsers(GraphServiceClient graphClient, object deltaLink)
+private async Task<IUserDeltaCollectionPage> GetUsers(GraphServiceClient graphClient, object deltaLink)
 {
-  IUserDeltaCollectionPage page;
+    IUserDeltaCollectionPage page;
 
-  if(lastPage == null)
-  {
-    page = graphClient
-      .Users
-      .Delta()
-      .Request()
-      .GetAsync()
-      .Result;
+    if (lastPage == null)
+    {
+        page = await graphClient
+            .Users
+            .Delta()
+            .Request()
+            .GetAsync();
 
-  }
-  else
-  {
-    lastPage.InitializeNextPageRequest(graphClient, deltaLink.ToString());
-    page = lastPage.NextPageRequest.GetAsync().Result;
-  }
+    }
+    else
+    {
+        lastPage.InitializeNextPageRequest(graphClient, deltaLink.ToString());
+        page = await lastPage.NextPageRequest.GetAsync();
+    }
 
-  lastPage = page;
-  return page;
+    lastPage = page;
+    return page;
 }
 ```
 
 Locate the existing `Post()` method and replace it with the following code:
 
 ```csharp
-public ActionResult<string> Post([FromQuery]string validationToken = null)
+public async Task<ActionResult<string>> Post([FromQuery]string validationToken = null)
 {
-  // handle validation
-  if(!string.IsNullOrEmpty(validationToken))
-  {
-    Console.WriteLine($"Received Token: '{validationToken}'");
-    return Ok(validationToken);
-  }
-
-  // handle notifications
-  using (StreamReader reader = new StreamReader(Request.Body))
-  {
-    string content = reader.ReadToEnd();
-
-    Console.WriteLine(content);
-
-    var notifications = JsonConvert.DeserializeObject<Notifications>(content);
-
-    foreach(var notification in notifications.Items)
+    // handle validation
+    if (!string.IsNullOrEmpty(validationToken))
     {
-      Console.WriteLine($"Received notification: '{notification.Resource}', {notification.ResourceData?.Id}");
+        Console.WriteLine($"Received Token: '{validationToken}'");
+        return Ok(validationToken);
     }
-  }
 
-  // use deltaquery to query for all updates
-  CheckForUpdates();
+    // handle notifications
+    using (StreamReader reader = new StreamReader(Request.Body))
+    {
+        string content = await reader.ReadToEndAsync();
 
-  return Ok();
+        Console.WriteLine(content);
+
+        var notifications = JsonConvert.DeserializeObject<Notifications>(content);
+
+        foreach (var notification in notifications.Items)
+        {
+            Console.WriteLine($"Received notification: '{notification.Resource}', {notification.ResourceData?.Id}");
+        }
+    }
+
+    // use deltaquery to query for all updates
+    await CheckForUpdates();            
+
+    return Ok();
 }
 ```
 
