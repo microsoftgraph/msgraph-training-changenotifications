@@ -7,7 +7,7 @@ Before you continue you should have [ngrok](https://ngrok.com) installed on your
 Run ngrok by executing the following from the command line:
 
 ```shell
-ngrok http 5000 -hostheader="localhost:5000"
+ngrok http 5000 -host-header="localhost:5000"
 ```
 
 This will start ngrok and will tunnel requests from an external ngrok url to your development machine on port 5000.
