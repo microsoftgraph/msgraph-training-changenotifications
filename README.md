@@ -32,6 +32,7 @@ This module has been recorded and is available in the Office Development YouTube
 
 | Version |       Date        |                     Comments                     |
 | ------- | ----------------- | ------------------------------------------------ |
+| 1.8     | June 11, 2020     | FY2020Q4 content refresh                         |
 | 1.7     | March 10, 2020    | FY2020Q3 content refresh                         |
 | 1.6     | January 21, 2020  | Port module to MS Learn                          |
 | 1.5     | December 9, 2019  | FY2020Q1 content refresh                         |
