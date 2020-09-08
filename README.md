@@ -22,7 +22,7 @@ This module has been recorded and is available in the Office Development YouTube
 
 ## Contributors
 
-|        Roles         |                                                   Author(s)                                                    |
+| Roles                | Author(s)                                                                                                      |
 | -------------------- | -------------------------------------------------------------------------------------------------------------- |
 | Lab / Slides / Demos | Andrew Connell (Microsoft MVP, [Voitanos](//github.com/voitanos)) [@andrewconnell](//github.com/andrewconnell) |
 | QA                   | Rob Windsor (Microsoft MVP, PAIT Group) [@rob-windsor](//github.com/rob-windsor)                               |
@@ -30,17 +30,18 @@ This module has been recorded and is available in the Office Development YouTube
 
 ## Version history
 
-| Version |       Date        |                     Comments                     |
-| ------- | ----------------- | ------------------------------------------------ |
-| 1.8     | June 11, 2020     | FY2020Q4 content refresh                         |
-| 1.7     | March 10, 2020    | FY2020Q3 content refresh                         |
-| 1.6     | January 21, 2020  | Port module to MS Learn                          |
-| 1.5     | December 9, 2019  | FY2020Q1 content refresh                         |
-| 1.4     | September 9, 2019 | FY2020Q1 content refresh                         |
-| 1.3     | June 18, 2019     | Updated readme to refreshed screencast recording |
-| 1.2     | May 30, 2019      | Fy2019Q4 content refresh                         |
-| 1.1     | April 9, 2019     | Added screencast link                            |
-| 1.0     | March 14, 2019    | New module submitted                             |
+| Version | Date               | Comments                                         |
+| ------- | ------------------ | ------------------------------------------------ |
+| 1.9     | September 10, 2020 | FY2021Q1 content refresh                         |
+| 1.8     | June 11, 2020      | FY2020Q4 content refresh                         |
+| 1.7     | March 10, 2020     | FY2020Q3 content refresh                         |
+| 1.6     | January 21, 2020   | Port module to MS Learn                          |
+| 1.5     | December 9, 2019   | FY2020Q1 content refresh                         |
+| 1.4     | September 9, 2019  | FY2020Q1 content refresh                         |
+| 1.3     | June 18, 2019      | Updated readme to refreshed screencast recording |
+| 1.2     | May 30, 2019       | Fy2019Q4 content refresh                         |
+| 1.1     | April 9, 2019      | Added screencast link                            |
+| 1.0     | March 14, 2019     | New module submitted                             |
 
 ## Disclaimer
 
