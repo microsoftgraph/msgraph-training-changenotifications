@@ -1,5 +1,3 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.	
-// Licensed under the MIT license.
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,10 +25,7 @@ namespace msgraphapp
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
-            var config = new MyConfig();
-            Configuration.Bind("MyConfig", config);
-            services.AddSingleton(config);
+            services.AddControllers();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -41,7 +36,7 @@ namespace msgraphapp
                 app.UseDeveloperExceptionPage();
             }
 
-            // app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
 
             app.UseRouting();
 
