@@ -23,6 +23,8 @@ namespace msgraphapp.Controllers
   public class NotificationsController : ControllerBase
   {
     private readonly MyConfig config;
+    private static Dictionary<string, Subscription> Subscriptions = new Dictionary<string, Subscription>();
+    private static Timer subscriptionTimer = null;
 
     public NotificationsController(MyConfig config)
     {
@@ -45,6 +47,13 @@ namespace msgraphapp.Controllers
         .Subscriptions
         .Request()
         .AddAsync(sub);
+
+      Subscriptions[newSubscription.Id] = newSubscription;
+
+      if (subscriptionTimer == null)
+      {
+        subscriptionTimer = new Timer(CheckSubscriptions, null, 5000, 15000);
+      }
 
       return $"Subscribed. Id: {newSubscription.Id}, Expiration: {newSubscription.ExpirationDateTime}";
     }
@@ -106,6 +115,43 @@ namespace msgraphapp.Controllers
       var result = await app.AcquireTokenForClient(scopes).ExecuteAsync();
 
       return result.AccessToken;
+    }
+
+    private void CheckSubscriptions(Object stateInfo)
+    {
+      AutoResetEvent autoEvent = (AutoResetEvent)stateInfo;
+
+      Console.WriteLine($"Checking subscriptions {DateTime.Now.ToString("h:mm:ss.fff")}");
+      Console.WriteLine($"Current subscription count {Subscriptions.Count()}");
+
+      foreach (var subscription in Subscriptions)
+      {
+        // if the subscription expires in the next 2 min, renew it
+        if (subscription.Value.ExpirationDateTime < DateTime.UtcNow.AddMinutes(2))
+        {
+          RenewSubscription(subscription.Value);
+        }
+      }
+    }
+
+    private async void RenewSubscription(Subscription subscription)
+    {
+      Console.WriteLine($"Current subscription: {subscription.Id}, Expiration: {subscription.ExpirationDateTime}");
+
+      var graphServiceClient = GetGraphClient();
+
+      var newSubscription = new Subscription
+      {
+        ExpirationDateTime = DateTime.UtcNow.AddMinutes(5)
+      };
+
+      await graphServiceClient
+        .Subscriptions[subscription.Id]
+        .Request()
+        .UpdateAsync(newSubscription);
+
+      subscription.ExpirationDateTime = newSubscription.ExpirationDateTime;
+      Console.WriteLine($"Renewed subscription: {subscription.Id}, New Expiration: {subscription.ExpirationDateTime}");
     }
 
   }

@@ -23,6 +23,8 @@ namespace msgraphapp.Controllers
   public class NotificationsController : ControllerBase
   {
     private readonly MyConfig config;
+    private static Dictionary<string, Subscription> Subscriptions = new Dictionary<string, Subscription>();
+    private static Timer subscriptionTimer = null;
 
     public NotificationsController(MyConfig config)
     {
@@ -46,38 +48,45 @@ namespace msgraphapp.Controllers
         .Request()
         .AddAsync(sub);
 
+      Subscriptions[newSubscription.Id] = newSubscription;
+
+      if (subscriptionTimer == null)
+      {
+        subscriptionTimer = new Timer(CheckSubscriptions, null, 5000, 15000);
+      }
+
       return $"Subscribed. Id: {newSubscription.Id}, Expiration: {newSubscription.ExpirationDateTime}";
     }
 
-public async Task<ActionResult<string>> Post([FromQuery]string validationToken = null)
-{
-  // handle validation
-  if (!string.IsNullOrEmpty(validationToken))
-  {
-    Console.WriteLine($"Received Token: '{validationToken}'");
-    return Ok(validationToken);
-  }
-
-  // handle notifications
-  using (StreamReader reader = new StreamReader(Request.Body))
-  {
-    string content = await reader.ReadToEndAsync();
-
-    Console.WriteLine(content);
-
-    var notifications = JsonConvert.DeserializeObject<Notifications>(content);
-
-    foreach (var notification in notifications.Items)
+    public async Task<ActionResult<string>> Post([FromQuery] string validationToken = null)
     {
-      Console.WriteLine($"Received notification: '{notification.Resource}', {notification.ResourceData?.Id}");
+      // handle validation
+      if (!string.IsNullOrEmpty(validationToken))
+      {
+        Console.WriteLine($"Received Token: '{validationToken}'");
+        return Ok(validationToken);
+      }
+
+      // handle notifications
+      using (StreamReader reader = new StreamReader(Request.Body))
+      {
+        string content = await reader.ReadToEndAsync();
+
+        Console.WriteLine(content);
+
+        var notifications = JsonConvert.DeserializeObject<Notifications>(content);
+
+        foreach (var notification in notifications.Items)
+        {
+          Console.WriteLine($"Received notification: '{notification.Resource}', {notification.ResourceData?.Id}");
+        }
+      }
+
+      // use deltaquery to query for all updates
+      await CheckForUpdates();
+
+      return Ok();
     }
-  }
-
-  // use deltaquery to query for all updates
-  await CheckForUpdates();
-
-  return Ok();
-}
 
     private GraphServiceClient GetGraphClient()
     {
@@ -109,6 +118,43 @@ public async Task<ActionResult<string>> Post([FromQuery]string validationToken =
       var result = await app.AcquireTokenForClient(scopes).ExecuteAsync();
 
       return result.AccessToken;
+    }
+
+    private void CheckSubscriptions(Object stateInfo)
+    {
+      AutoResetEvent autoEvent = (AutoResetEvent)stateInfo;
+
+      Console.WriteLine($"Checking subscriptions {DateTime.Now.ToString("h:mm:ss.fff")}");
+      Console.WriteLine($"Current subscription count {Subscriptions.Count()}");
+
+      foreach (var subscription in Subscriptions)
+      {
+        // if the subscription expires in the next 2 min, renew it
+        if (subscription.Value.ExpirationDateTime < DateTime.UtcNow.AddMinutes(2))
+        {
+          RenewSubscription(subscription.Value);
+        }
+      }
+    }
+
+    private async void RenewSubscription(Subscription subscription)
+    {
+      Console.WriteLine($"Current subscription: {subscription.Id}, Expiration: {subscription.ExpirationDateTime}");
+
+      var graphServiceClient = GetGraphClient();
+
+      var newSubscription = new Subscription
+      {
+        ExpirationDateTime = DateTime.UtcNow.AddMinutes(5)
+      };
+
+      await graphServiceClient
+        .Subscriptions[subscription.Id]
+        .Request()
+        .UpdateAsync(newSubscription);
+
+      subscription.ExpirationDateTime = newSubscription.ExpirationDateTime;
+      Console.WriteLine($"Renewed subscription: {subscription.Id}, New Expiration: {subscription.ExpirationDateTime}");
     }
 
     private static object DeltaLink = null;
