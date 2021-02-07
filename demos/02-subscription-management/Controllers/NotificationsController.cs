@@ -153,6 +153,5 @@ namespace msgraphapp.Controllers
       subscription.ExpirationDateTime = newSubscription.ExpirationDateTime;
       Console.WriteLine($"Renewed subscription: {subscription.Id}, New Expiration: {subscription.ExpirationDateTime}");
     }
-
   }
 }
