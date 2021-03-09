@@ -8,3 +8,6 @@ obj/
 !./.vscode/tasks.json
 !./.vscode/launch.json
 !./.vscode/extensions.json
+/.vs
+/demos/04-azure-eventhub-listener/packages
+/demos/04-azure-eventhub-listener/.vs/Receiver/v16
