@@ -87,7 +87,6 @@ namespace msgraphapp.Controllers
 
       return Ok();
     }
-
     private GraphServiceClient GetGraphClient()
     {
       var graphClient = new GraphServiceClient(new DelegateAuthenticationProvider((requestMessage) =>
@@ -214,6 +213,5 @@ namespace msgraphapp.Controllers
       lastPage = page;
       return page;
     }
-
   }
 }
