@@ -3,17 +3,11 @@ using System;
 using System.Configuration;
 using System.Threading.Tasks;
 
-
-
 namespace Receiver
 {
-
-
-
-
-    class Program
+    internal class Program
     {
-        static async Task Main(string[] args)
+        private static async Task Main(string[] args)
         {
             string eventHubConnectionString = ConfigurationManager.AppSettings["EventHubConnectionString"];
             string eventHubName = ConfigurationManager.AppSettings["EventHubName"];
@@ -30,9 +24,7 @@ namespace Receiver
             Console.WriteLine("Receiving. Press enter key to stop worker.");
             Console.ReadLine();
 
-
             await eventProcessorHost.UnregisterEventProcessorAsync();
         }
-
     }
 }
