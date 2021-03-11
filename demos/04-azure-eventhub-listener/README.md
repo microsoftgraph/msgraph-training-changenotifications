@@ -203,7 +203,7 @@ To create a general-purpose v2 storage account in the Azure portal, follow these
 1. Select Review + Create to review your storage account settings and create the account.
 1. Select Create.
 1. After deployment of the resourse, click view resource and go to the Access Keys menu. 
-1. Click the `show keys` button and copy the Key1 key value for usage in the Event hub listener.
+1. Click the `show keys` button and copy the Key1 `key` value for usage in the Event hub listener configuration.
 
 
 ### Creating the subscription and receiving notifications
