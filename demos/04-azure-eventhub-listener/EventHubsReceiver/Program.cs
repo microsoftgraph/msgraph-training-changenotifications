@@ -1,11 +1,12 @@
-﻿using Azure.Messaging.EventHubs;
-using Azure.Messaging.EventHubs.Producer;
+﻿using Azure.Messaging.EventHubs.Consumer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
 using System;
+using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EventHubsReceiver
@@ -28,43 +29,61 @@ namespace EventHubsReceiver
             // Instantiate and prepare the Graph SDK
             var graphServiceClient = GetGraphServiceClient();
 
-            //Console.WriteLine("Create a subscription and then press any key to continue..");
-            //Console.ReadKey();
             // Create a Subscription
             string subId = await CreateSubscription(graphServiceClient);
             Console.WriteLine($"Subscription created with {subId}");
 
             // Prepare to Receive messages (notifications)
-            Console.WriteLine($"Starting the event hub receiver");
+            Console.WriteLine($"Checking the event hub for messages");
+
             SimpleEventProcessor simpleEventProcessor = new SimpleEventProcessor(_appConfiguration);
-            await simpleEventProcessor.ReceiveMessages();
+            await simpleEventProcessor.ProcessMessages();
+            //string eventProcessorHostName = Guid.NewGuid().ToString();
+            //EventProcessorHost eventProcessorHost = new EventProcessorHost(eventProcessorHostName, _appConfiguration.EventHubName, EventHubConsumerGroup.DefaultGroupName, _appConfiguration.EventHubConnectionString, _appConfiguration.StorageConnectionString);
+            //await eventProcessorHost.RegisterEventProcessorAsync<SimpleEventProcessor>();
+
+                        //string consumerGroup = EventHubConsumerClient.DefaultConsumerGroupName;
+            //var consumer = new EventHubConsumerClient(consumerGroup, _appConfiguration.EventHubConnectionString, _appConfiguration.EventHubName);
+
+            //try
+            //{
+            //    using CancellationTokenSource cancellationSource = new CancellationTokenSource();
+            //    cancellationSource.CancelAfter(TimeSpan.FromSeconds(30));
+
+            //    string firstPartition = (await consumer.GetPartitionIdsAsync(cancellationSource.Token)).First();
+            //    EventPosition startingPosition = EventPosition.Earliest;
+
+            //    await foreach (PartitionEvent partitionEvent in consumer.ReadEventsFromPartitionAsync(firstPartition, startingPosition, cancellationSource.Token))
+            //    {
+            //        string readFromPartition = partitionEvent.Partition.PartitionId;
+            //        ReadOnlyMemory<byte> eventBodyBytes = partitionEvent.Data.EventBody.ToMemory();
+
+            //        Console.WriteLine($"Read event of length { eventBodyBytes.Length } from { readFromPartition }");
+            //        string eventdata = Encoding.UTF8.GetString(eventBodyBytes.ToArray());
+            //        Console.WriteLine("eventData = {0}", eventdata);
+            //    }
+            //}
+            //catch (TaskCanceledException)
+            //{
+            //    // This is expected if the cancellation token is
+            //    // signaled.
+            //}
+            //finally
+            //{
+            //    await consumer.CloseAsync();
+            //}
+
             Console.WriteLine($"Event hub receiver started...");
 
             // Start user creation and deletion activities to trigger messages
             UserHelper userHelper = new UserHelper(graphServiceClient, _appConfiguration.TenantDomain);
             await userHelper.GraphDeltaQueryExample();
 
+            Console.WriteLine($"Checking the event hub for messages again");
+            await simpleEventProcessor.ProcessMessages();
+
             Console.WriteLine("Press any key to exit");
             Console.ReadKey();
-        }
-
-        private static async Task SendMessages()
-        {
-            // Create a producer client that you can use to send events to an event hub
-            await using (var producerClient = new EventHubProducerClient(_appConfiguration.EventHubConnectionString, _appConfiguration.EventHubName))
-            {
-                // Create a batch of events
-                using EventDataBatch eventBatch = await producerClient.CreateBatchAsync();
-
-                // Add events to the batch. An event is a represented by a collection of bytes and metadata.
-                eventBatch.TryAdd(new EventData(Encoding.UTF8.GetBytes("First event")));
-                eventBatch.TryAdd(new EventData(Encoding.UTF8.GetBytes("Second event")));
-                eventBatch.TryAdd(new EventData(Encoding.UTF8.GetBytes("Third event")));
-
-                // Use the producer client to send the batch of events to the event hub
-                await producerClient.SendAsync(eventBatch);
-                Console.WriteLine("A batch of 3 events has been published.");
-            }
         }
 
         private static async Task<String> CreateSubscription(GraphServiceClient graphServiceClient)

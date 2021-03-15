@@ -8,7 +8,7 @@ namespace EventHubsReceiver
     {
         public string EventHubConnectionString { get; set; }
         public string EventHubName { get; set; }
-        public string BlobStorageConnectionString { get; set; }
+        public string StorageConnectionString { get; set; }
         public string BlobContainerName { get; set; }
 
         /// <summary>
