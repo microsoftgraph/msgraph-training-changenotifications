@@ -15,6 +15,7 @@ In this lab you will create a .NET Core console application that receives change
 - [Create a .NET Core app](./demos/01-create-application)
 - [Add Subscription Lifecycle](./demos/02-subscription-management)
 - [Add Track Changes](./demos/03-track-changes)
+- [Track Changes with EventHubs](./demos/04-azure-eventhub-listener)
 
 ## Watch the module
 
