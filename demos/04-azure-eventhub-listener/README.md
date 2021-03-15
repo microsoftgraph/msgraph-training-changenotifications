@@ -214,7 +214,27 @@ New-AzureADServicePrincipal -AppId 0bf30f3b-4a52-48df-9a82-234910c4a086
 
 ##### Configuring the Azure Storage Account
 
-[TODO]
+In order to setup an event hub listener, an azure storage account is required. The following storage properties are required for the event hub listener
+- Storage account name
+- Storage Access Key
+
+To create a general-purpose v2 storage account in the Azure portal, follow these steps:
+
+1. On the [Azure Portal](https://portal.azure.com) menu, select All services. In the list of resources, type Storage Accounts. As you begin typing, the list filters based on your input. Select Storage Accounts.
+1. On the Storage Accounts window that appears, choose Add.
+1. On the Basics tab, select the subscription in which to create the storage account.
+1. Under the Resource group field, select your desired resource group, or create a new resource group. For more information on Azure resource groups, see Azure Resource Manager overview.
+1. Next, enter a name for your storage account. The name you choose must be unique across Azure. The name also must be between 3 and 24 characters in length, and may include only numbers and lowercase letters.
+1. Select a location for your storage account, or use the default location.
+1. Select a performance tier. The default tier is Standard.
+1. Set the Account kind field to Storage V2 (general-purpose v2).
+1. Specify how the storage account will be replicated. The default replication option is Read-access geo-redundant storage (RA-GRS). For more information about available replication options, see Azure Storage redundancy.
+1. Additional options are available on the Networking, Data protection, Advanced, and Tags tabs. To use Azure Data Lake Storage, choose the Advanced tab, and then set Hierarchical namespace to Enabled. For more information, see Azure Data Lake Storage Gen2 Introduction
+1. Select Review + Create to review your storage account settings and create the account.
+1. Select Create.
+1. After deployment of the resourse, click view resource and go to the Access Keys menu. 
+1. Click the `show keys` button and copy the Key1 `key` value for usage in the Event hub listener configuration.
+
 
 ### Creating the subscription and receiving notifications
 

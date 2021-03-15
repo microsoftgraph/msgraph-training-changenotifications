@@ -13,3 +13,5 @@ obj/
 /demos/04-azure-eventhub-listener/.vs/Receiver/v16
 /~$04 Get notifications through Azure Event Hubs.pptx
 /demos/04-azure-eventhub-listener/.vs/Receiver
+/demos/.vs
+/demos/04-azure-eventhub-listener/.vs/04-azure-eventhub-listener/v16
