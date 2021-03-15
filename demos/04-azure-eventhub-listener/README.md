@@ -38,11 +38,16 @@ description: "This sample demonstrates a .NET console application showcasing Mic
       - [Option 2: Using the Azure Portal](#option-2-using-the-azure-portal)
         - [Configuring the Azure Event Hub](#configuring-the-azure-event-hub)
         - [Configuring the Azure Key Vault](#configuring-the-azure-key-vault)
+    - [What happens if the Microsoft Graph change tracking application is missing?](#what-happens-if-the-microsoft-graph-change-tracking-application-is-missing)
         - [Configuring the Azure Storage Account](#configuring-the-azure-storage-account)
     - [Creating the subscription and receiving notifications](#creating-the-subscription-and-receiving-notifications)
   - [Setup](#setup)
     - [Step 1:  Clone or download this repository](#step-1--clone-or-download-this-repository)
   - [Configure the sample](#configure-the-sample)
+    - [EventHubConnectionString](#eventhubconnectionstring)
+    - [EventHubName](#eventhubname)
+    - [StorageAccountName](#storageaccountname)
+    - [StorageAccountKey](#storageaccountkey)
   - [Run the sample](#run-the-sample)
     - [On Visual Studio](#on-visual-studio)
     - [Using the app](#using-the-app)
@@ -69,7 +74,7 @@ Good examples of high throughput scenarios include applications subscribing to a
 
 ### Step 1: Register your application
 
-Use the [Microsoft Application Registration Portal](https://aka.ms/appregistrations) to register your application with the Microsoft Microsoft Identity Platform. This sample assumes that you have named your app **Microsoft Graph Change Tracking**.
+Use the [Microsoft Application Registration Portal](https://aka.ms/appregistrations) to register your application with the Microsoft Microsoft Identity Platform. 
 
 ![Application Registration](docs/register_app.png)
 **Note:** Make sure to set the right **Redirect URI** (`http://localhost`) and application type is **Mobile and desktop applications**.
@@ -182,7 +187,33 @@ Steps:
 1. Click **Access Policies** and **+ Add Access Policy**.  
 1. For **Secret permissions**, select **Get**, and for **Select Principal**, select **Microsoft Graph Change Tracking**. Click **Add**.  
 
+### What happens if the Microsoft Graph change tracking application is missing?
+
+It's possible that the **Microsoft Graph Change Tracking** service principal is missing from your tenant, depending on when the tenant was created and administrative operations. To resolve this issue, run [the following query](https://developer.microsoft.com/en-us/graph/graph-explorer?request=servicePrincipals&method=POST&version=v1.0&GraphUrl=https://graph.microsoft.com&requestBody=eyJhcHBJZCI6IjBiZjMwZjNiLTRhNTItNDhkZi05YTgyLTIzNDkxMGM0YTA4NiJ9) in [Microsoft Graph Explorer](https://developer.microsoft.com/en-us/graph/graph-explorer).
+
+Query details:
+
+```http
+POST https://graph.microsoft.com/v1.0/servicePrincipals
+{
+    "appId": "0bf30f3b-4a52-48df-9a82-234910c4a086"
+}
+```
+
+> **Note:** You can get an access denied running this query. In this case, select the gear icon next to your account name in the top left corner. Then select **Select Permissions** and search for **Application.ReadWrite.All**. Check the permission and select **Consent**. After consenting to this new permission, run the request again.
+
+> **Note:** This API only works with a school or work account, not with a personal account. Make sure that you are signed in with an account on your domain.
+
+Alternatively, you can use this [Azure Active Directory PowerShell](/powershell/azure/active-directory/install-adv2?view=azureadps-2.0) script to add the missing service principal.
+
+```PowerShell
+Connect-AzureAD -TenantId <tenant-id>
+# replace tenant-id by the id of your tenant.
+New-AzureADServicePrincipal -AppId 0bf30f3b-4a52-48df-9a82-234910c4a086
+```
+
 ##### Configuring the Azure Storage Account
+
 [TODO]
 
 ### Creating the subscription and receiving notifications
@@ -206,10 +237,19 @@ or download and extract the repository .zip file.
 
 In the `appSettings` section, populate the following keys
 
-- EventHubConnectionString
-- EventHubName
-- StorageAccountName
-- StorageAccountKey
+### EventHubConnectionString
+
+You must set it to `EventHub:https://<azurekeyvaultname>.vault.azure.net/secrets/<secretname>?tenantId=<domainname>`, with the following values:
+
+- `azurekeyvaultname` - The name you gave to the key vault when you created it. Can be found in the Vault URI.
+- `secretname` - The name you gave to the secret when you created it. Can be found on the Azure Key Vault **Secrets** page.
+- `domainname` - The name of your tenant; for example, contoso.onmicrosoft.com or contoso.com. Because this domain will be used to access the Azure Key Vault, it is important that it matches the domain used by the Azure subscription that holds the Azure Key Vault. To get this information, you can go to the overview page of the Azure Key Vault you created and click the subscription. The domain name is displayed under the **Directory** field.
+  
+### EventHubName
+
+### StorageAccountName
+
+### StorageAccountKey
   
 ## Run the sample
 
