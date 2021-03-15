@@ -34,24 +34,23 @@ description: "This sample demonstrates a .NET console application showcasing Mic
     - [Step 2: Set the MS Graph permissions](#step-2-set-the-ms-graph-permissions)
   - [Using Azure Event Hubs to receive change notifications](#using-azure-event-hubs-to-receive-change-notifications)
     - [Set up the Azure KeyVault and Azure Event Hubs](#set-up-the-azure-keyvault-and-azure-event-hubs)
-      - [Option 1: Using the Azure CLI](#option-1-using-the-azure-cli)
-      - [Option 2: Using the Azure Portal](#option-2-using-the-azure-portal)
-        - [Configuring the Azure Event Hub](#configuring-the-azure-event-hub)
-        - [Configuring the Azure Key Vault](#configuring-the-azure-key-vault)
-    - [What happens if the Microsoft Graph change tracking application is missing?](#what-happens-if-the-microsoft-graph-change-tracking-application-is-missing)
-        - [Configuring the Azure Storage Account](#configuring-the-azure-storage-account)
+      - [Configuring the Azure Event Hub](#configuring-the-azure-event-hub)
+      - [Configuring the Azure Key Vault](#configuring-the-azure-key-vault)
+        - [What happens if the Microsoft Graph change tracking application is missing?](#what-happens-if-the-microsoft-graph-change-tracking-application-is-missing)
+      - [Configuring the Azure Storage Account](#configuring-the-azure-storage-account)
     - [Creating the subscription and receiving notifications](#creating-the-subscription-and-receiving-notifications)
   - [Setup](#setup)
     - [Step 1:  Clone or download this repository](#step-1--clone-or-download-this-repository)
   - [Configure the sample](#configure-the-sample)
+    - [NotificationUrl](#notificationurl)
     - [EventHubConnectionString](#eventhubconnectionstring)
     - [EventHubName](#eventhubname)
-    - [StorageAccountName](#storageaccountname)
-    - [StorageAccountKey](#storageaccountkey)
+    - [StorageConnectionString](#storageconnectionstring)
+    - [BlobContainerName](#blobcontainername)
+    - [TenantDomain](#tenantdomain)
   - [Run the sample](#run-the-sample)
     - [On Visual Studio](#on-visual-studio)
     - [Using the app](#using-the-app)
-  - [About the Code](#about-the-code)
 
 ## Overview
 
@@ -74,14 +73,16 @@ Good examples of high throughput scenarios include applications subscribing to a
 
 ### Step 1: Register your application
 
-Use the [Microsoft Application Registration Portal](https://aka.ms/appregistrations) to register your application with the Microsoft Microsoft Identity Platform. 
+Use the [Microsoft Application Registration Portal](https://aka.ms/appregistrations) to register your application with the Microsoft Microsoft Identity Platform.
 
 ![Application Registration](docs/register_app.png)
 **Note:** Make sure to set the right **Redirect URI** (`http://localhost`) and application type is **Mobile and desktop applications**.
 
+In the app's registration **Overview** screen, find and note the **Application (client) ID** and **Directory (tenant) ID**. You use this value in your app's configuration file(s) later in your code.
+
 ### Step 2: Set the MS Graph permissions
 
-Add the [delegated permissions](https://docs.microsoft.com/graph/permissions-reference#delegated-permissions-20) for `Directory.Read.All`. We advise you to register and use this sample on a Dev/Test tenant and not on your production tenant.
+Add the [delegated permissions](https://docs.microsoft.com/graph/permissions-reference#delegated-permissions-20) for `Directory.Read.All`, `User.ReadWrite.All`. We advise you to register and use this sample on a Dev/Test tenant and not on your production tenant.
 
 ![Api Permissions](docs/api_permissions.png)
 
@@ -94,53 +95,13 @@ Using Azure Event Hubs to receive change notifications differs from webhooks in 
 - You don't need to reply to the [notification URL validation](webhooks.md#notification-endpoint-validation). You can ignore the validation message that you receive.
 - You'll need to provision an Azure Event Hub.
 - You'll need to provision an Azure Key Vault.
+- You'll need to provision an Azure blob container.
 
 ### Set up the Azure KeyVault and Azure Event Hubs
 
 This section will walk you through the setup of required Azure services.
 
-#### Option 1: Using the Azure CLI
-
-The [Azure CLI](/cli/azure/what-is-azure-cli) allows you to script and automate administrative tasks in Azure. The CLI can be [installed on your local computer](/cli/azure/install-azure-cli) or run directly from the [Azure Cloud Shell](/azure/cloud-shell/quickstart).
-
-```azurecli
-# --------------
-# TODO: update the following values
-#sets the name of the resource group
-resourcegroup=rg-graphevents-dev
-#sets the location of the resources
-location='uk south'
-#sets the name of the Azure Event Hubs namespace
-evhamespacename=evh-graphevents-dev
-#sets the name of the hub under the namespace
-evhhubname=graphevents
-#sets the name of the access policy to the hub
-evhpolicyname=grapheventspolicy
-#sets the name of the Azure KeyVault
-keyvaultname=kv-graphevents
-#sets the name of the secret in Azure KeyVault that will contain the connection string to the hub
-keyvaultsecretname=grapheventsconnectionstring
-# --------------
-az group create --location $location --name $resourcegroup
-az eventhubs namespace create --name $evhamespacename --resource-group $resourcegroup --sku Basic --location $location
-az eventhubs eventhub create --name $evhhubname --namespace-name $evhamespacename --resource-group $resourcegroup --partition-count 2 --message-retention 1
-az eventhubs eventhub authorization-rule create --name $evhpolicyname --eventhub-name $evhhubname --namespace-name $evhamespacename --resource-group $resourcegroup --rights Send
-evhprimaryconnectionstring=`az eventhubs eventhub authorization-rule keys list --name $evhpolicyname --eventhub-name $evhhubname --namespace-name $evhamespacename --resource-group $resourcegroup --query "primaryConnectionString" --output tsv`
-az keyvault create --name $keyvaultname --resource-group $resourcegroup --location $location --enable-soft-delete true --sku standard --retention-days 90
-az keyvault secret set --name $keyvaultsecretname --value $evhprimaryconnectionstring --vault-name $keyvaultname --output none
-graphspn=`az ad sp list --display-name 'Microsoft Graph Change Tracking' --query "[].appId" --output tsv`
-az keyvault set-policy --name $keyvaultname --resource-group $resourcegroup --secret-permissions get --spn $graphspn --output none
-keyvaulturi=`az keyvault show --name $keyvaultname --resource-group $resourcegroup --query "properties.vaultUri" --output tsv`
-domainname=`az ad signed-in-user show --query 'userPrincipalName' | cut -d '@' -f 2 | sed 's/\"//'`
-notificationUrl="EventHub:${keyvaulturi}secrets/${keyvaultsecretname}?tenantId=${domainname}"
-echo "Notification Url:\n${notificationUrl}"
-```
-
-> **Note:** The script provided here is compatible with Linux based shells, Windows WSL, and Azure Cloud Shell. It will require some updates to run in Windows shells.
-
-#### Option 2: Using the Azure Portal
-
-##### Configuring the Azure Event Hub
+#### Configuring the Azure Event Hub
 
 In this section you will:
 
@@ -159,11 +120,11 @@ Steps:
 1. When the Event Hub namespace is provisioned, go to the page for the namespace.  
 1. Click **Event Hubs** and **+ Event Hub**.  
 1. Give a name to the new Event Hub, and click **Create**.  
-1. After the Event Hub has been created, click the name of the Event Hub, and then click **Shared access policies** and **+ Add** to add a new policy.  
+1. After the Event Hub has been created, click the **name of the Event Hub**, and then click **Shared access policies** and **+ Add** to add a new policy.  
 1. Give a name to the policy, check **Send**, and click **Create**.  
 1. After the policy has been created, click the name of the policy to open the details panel, and then copy the **Connection string-primary key** value. Write it down; you'll need it for the next step.  
 
-##### Configuring the Azure Key Vault
+#### Configuring the Azure Key Vault
 
 In order to access the Event Hub securely and to allow for key rotations, Microsoft Graph gets the connection string to the Event Hub through Azure Key Vault.  
 In this section, you will:
@@ -187,7 +148,7 @@ Steps:
 1. Click **Access Policies** and **+ Add Access Policy**.  
 1. For **Secret permissions**, select **Get**, and for **Select Principal**, select **Microsoft Graph Change Tracking**. Click **Add**.  
 
-### What happens if the Microsoft Graph change tracking application is missing?
+##### What happens if the Microsoft Graph change tracking application is missing?
 
 It's possible that the **Microsoft Graph Change Tracking** service principal is missing from your tenant, depending on when the tenant was created and administrative operations. To resolve this issue, run [the following query](https://developer.microsoft.com/en-us/graph/graph-explorer?request=servicePrincipals&method=POST&version=v1.0&GraphUrl=https://graph.microsoft.com&requestBody=eyJhcHBJZCI6IjBiZjMwZjNiLTRhNTItNDhkZi05YTgyLTIzNDkxMGM0YTA4NiJ9) in [Microsoft Graph Explorer](https://developer.microsoft.com/en-us/graph/graph-explorer).
 
@@ -204,7 +165,7 @@ POST https://graph.microsoft.com/v1.0/servicePrincipals
 
 > **Note:** This API only works with a school or work account, not with a personal account. Make sure that you are signed in with an account on your domain.
 
-Alternatively, you can use this [Azure Active Directory PowerShell](/powershell/azure/active-directory/install-adv2?view=azureadps-2.0) script to add the missing service principal.
+Alternatively, you can use this [Azure Active Directory PowerShell](/powershell/azure/active-directory/install-adv2) script to add the missing service principal.
 
 ```PowerShell
 Connect-AzureAD -TenantId <tenant-id>
@@ -212,13 +173,14 @@ Connect-AzureAD -TenantId <tenant-id>
 New-AzureADServicePrincipal -AppId 0bf30f3b-4a52-48df-9a82-234910c4a086
 ```
 
-##### Configuring the Azure Storage Account
+#### Configuring the Azure Storage Account
 
 In order to setup an event hub listener, an azure storage account is required. The following storage properties are required for the event hub listener
+
 - Storage account name
 - Storage Access Key
 
-To create a general-purpose v2 storage account in the Azure portal, follow these steps:
+To create a general-purpose storage account in the Azure portal, follow these steps:
 
 1. On the [Azure Portal](https://portal.azure.com) menu, select All services. In the list of resources, type Storage Accounts. As you begin typing, the list filters based on your input. Select Storage Accounts.
 1. On the Storage Accounts window that appears, choose Add.
@@ -232,7 +194,7 @@ To create a general-purpose v2 storage account in the Azure portal, follow these
 1. Additional options are available on the Networking, Data protection, Advanced, and Tags tabs. To use Azure Data Lake Storage, choose the Advanced tab, and then set Hierarchical namespace to Enabled. For more information, see Azure Data Lake Storage Gen2 Introduction
 1. Select Review + Create to review your storage account settings and create the account.
 1. Select Create.
-1. After deployment of the resourse, click view resource and go to the Access Keys menu. 
+1. After deployment of the resource, click view resource and go to the Access Keys menu. 
 1. Click the `show keys` button and copy the Key1 `key` value for usage in the Event hub listener configuration.
 
 
@@ -255,9 +217,9 @@ or download and extract the repository .zip file.
 
 ## Configure the sample
 
-In the `appSettings` section, populate the following keys
+In the `appSettings.json` section, populate the following keys
 
-### EventHubConnectionString
+### NotificationUrl
 
 You must set it to `EventHub:https://<azurekeyvaultname>.vault.azure.net/secrets/<secretname>?tenantId=<domainname>`, with the following values:
 
@@ -265,12 +227,29 @@ You must set it to `EventHub:https://<azurekeyvaultname>.vault.azure.net/secrets
 - `secretname` - The name you gave to the secret when you created it. Can be found on the Azure Key Vault **Secrets** page.
 - `domainname` - The name of your tenant; for example, contoso.onmicrosoft.com or contoso.com. Because this domain will be used to access the Azure Key Vault, it is important that it matches the domain used by the Azure subscription that holds the Azure Key Vault. To get this information, you can go to the overview page of the Azure Key Vault you created and click the subscription. The domain name is displayed under the **Directory** field.
   
+### EventHubConnectionString
+
+The connection string to your event hub in the form of :
+
+`Endpoint=sb://<my event hub namespace>.servicebus.windows.net/;SharedAccessKeyName=<SH key name>;SharedAccessKey=<SA key>`
+
 ### EventHubName
 
-### StorageAccountName
+Provide the name of the event hub that you created earlier
 
-### StorageAccountKey
+### StorageConnectionString
+
+The Storage account connection string in the form of :
+`DefaultEndpointsProtocol=https;AccountName=<My account name>;AccountKey=<my account key>;EndpointSuffix=core.windows.net`
+
+### BlobContainerName
+
+The name of the blob container you created in the storage account above
   
+### TenantDomain
+
+The Tenant/Directory domain, like contoso.onmicrosoft.com
+
 ## Run the sample
 
 ### On Visual Studio
@@ -279,18 +258,14 @@ Press F5. This will restore the missing nuget packages, build the solution and r
 
 ### Using the app
 
-If everything was configured correctly, you should be able to see the first login prompt. The auth token will be cached thanks to [MSAL token cache extension](https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet) for the subsequent runs.  
-You can query your tenant by typing the arguments of the standard OData `$select`, `$filter`, `$orderBy`, `$search` clauses in the relative text boxes. In the screenshot below you can see the $search operator in action:
+If everything was configured correctly, you should be able to see the first login prompt.
 
-![Screenshot of the App](docs/app1.png)
+Once started the app will first read the existing messages on the event hub abd list those out.
 
-- If you double click on a row, a default drill-down will happen (for example by showing the list of transitive groups a user is part of).
-- If you click on a header, the results will be sorted by that column. **Note: not all columns are supported and you may receive an error**.
-- If any query error happen, it will displayed with a Message box.
+After that, the code will list all users, and then create and delete a user in this dev/test tenant.
 
-The generated URL will appear in the readonly Url textbox. You can click the Graph Explorer button to open the current query in Graph Explorer.
+Finally, the code will read the new messages in the event hub again. you'd notice that the following messages are listed
 
-## About the Code
-[TODO]
-
-
+1. The first one is a notification validation message, that you can ignore
+1. The second one is about a newly created user
+1. The final one is about the deleted user.
