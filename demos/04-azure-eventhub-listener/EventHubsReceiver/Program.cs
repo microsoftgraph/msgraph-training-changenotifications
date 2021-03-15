@@ -1,19 +1,19 @@
 ﻿using Azure.Messaging.EventHubs;
-using Azure.Messaging.EventHubs.Consumer;
-using Azure.Messaging.EventHubs.Processor;
 using Azure.Messaging.EventHubs.Producer;
-using Azure.Storage.Blobs;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Graph;
+using Microsoft.Identity.Client;
 using System;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 
 namespace EventHubsReceiver
 {
     internal class Program
     {
         private static IConfiguration configuration;
-        private static AppConfiguration appConfiguration;
+        private static AppConfiguration _appConfiguration;
 
         private static async Task Main()
         {
@@ -23,20 +23,35 @@ namespace EventHubsReceiver
                         .AddJsonFile("appsettings.json");
 
             configuration = builder.Build();
-            appConfiguration = configuration.Get<AppConfiguration>();
+            _appConfiguration = configuration.Get<AppConfiguration>();
 
-            // Uncomment below to send messages
-            // await SendMessages();
+            // Instantiate and prepare the Graph SDK
+            var graphServiceClient = GetGraphServiceClient();
 
-            // Receive messages
-             await ReceiveMessages();
+            //Console.WriteLine("Create a subscription and then press any key to continue..");
+            //Console.ReadKey();
+            // Create a Subscription
+            string subId = await CreateSubscription(graphServiceClient);
+            Console.WriteLine($"Subscription created with {subId}");
+
+            // Prepare to Receive messages (notifications)
+            Console.WriteLine($"Starting the event hub receiver");
+            SimpleEventProcessor simpleEventProcessor = new SimpleEventProcessor(_appConfiguration);
+            await simpleEventProcessor.ReceiveMessages();
+            Console.WriteLine($"Event hub receiver started...");
+
+            // Start user creation and deletion activities to trigger messages
+            UserHelper userHelper = new UserHelper(graphServiceClient, _appConfiguration.TenantDomain);
+            await userHelper.GraphDeltaQueryExample();
+
+            Console.WriteLine("Press any key to exit");
+            Console.ReadKey();
         }
 
         private static async Task SendMessages()
         {
-
             // Create a producer client that you can use to send events to an event hub
-            await using (var producerClient = new EventHubProducerClient(appConfiguration.EventHubConnectionString, appConfiguration.EventHubName))
+            await using (var producerClient = new EventHubProducerClient(_appConfiguration.EventHubConnectionString, _appConfiguration.EventHubName))
             {
                 // Create a batch of events
                 using EventDataBatch eventBatch = await producerClient.CreateBatchAsync();
@@ -52,46 +67,65 @@ namespace EventHubsReceiver
             }
         }
 
-        private static async Task ReceiveMessages()
+        private static async Task<String> CreateSubscription(GraphServiceClient graphServiceClient)
         {
-            // Read from the default consumer group: $Default
-            string consumerGroup = EventHubConsumerClient.DefaultConsumerGroupName;
+            var sub = new Microsoft.Graph.Subscription();
+            sub.ChangeType = "Updated,Deleted";
+            sub.NotificationUrl = _appConfiguration.NotificationUrl;
+            sub.Resource = "/users";
+            sub.ExpirationDateTime = DateTime.UtcNow.AddMinutes(15);
+            sub.ClientState = "SecretClientState";
 
-            // Create a blob container client that the event processor will use
-            BlobContainerClient storageClient = new BlobContainerClient(appConfiguration.BlobStorageConnectionString, appConfiguration.BlobContainerName);
+            var newSubscription = await graphServiceClient
+              .Subscriptions
+              .Request()
+              .AddAsync(sub);
 
-            // Create an event processor client to process events in the event hub
-            EventProcessorClient processor = new EventProcessorClient(storageClient, consumerGroup, appConfiguration.EventHubConnectionString, appConfiguration.EventHubName);
-
-            // Register handlers for processing events and handling errors
-            processor.ProcessEventAsync += ProcessEventHandler;
-            processor.ProcessErrorAsync += ProcessErrorHandler;
-
-            // Start the processing
-            await processor.StartProcessingAsync();
-
-            // Wait for 10 seconds for the events to be processed
-            await Task.Delay(TimeSpan.FromSeconds(10));
-
-            // Stop the processing
-            await processor.StopProcessingAsync();
+            return $"Subscribed. Id: {newSubscription.Id}, Expiration: {newSubscription.ExpirationDateTime}";
         }
 
-        private static async Task ProcessEventHandler(ProcessEventArgs eventArgs)
+        private static GraphServiceClient GetGraphServiceClient()
         {
-            // Write the body of the event to the console window
-            Console.WriteLine("\tReceived event: {0}", Encoding.UTF8.GetString(eventArgs.Data.Body.ToArray()));
+            var graphClient = new GraphServiceClient(new DelegateAuthenticationProvider(async (requestMessage) =>
+            {
+                // get an access token for Graph
+                await AuthenticateUsingMsalAsync();
 
-            // Update checkpoint in the blob storage so that the app receives only new events the next time it's run
-            await eventArgs.UpdateCheckpointAsync(eventArgs.CancellationToken);
+                requestMessage
+                    .Headers
+                    .Authorization = new AuthenticationHeaderValue("bearer", _GraphAccessToken);
+
+                //return Task.FromResult(0);
+            }));
+
+            return graphClient;
         }
 
-        private static Task ProcessErrorHandler(ProcessErrorEventArgs eventArgs)
+        public static string _GraphAccessToken = string.Empty;
+
+        public static async Task<string> AuthenticateUsingMsalAsync()
         {
-            // Write details about the error to the console window
-            Console.WriteLine($"\tPartition '{ eventArgs.PartitionId}': an unhandled exception was encountered. This was not expected to happen.");
-            Console.WriteLine(eventArgs.Exception.Message);
-            return Task.CompletedTask;
+            if (!string.IsNullOrWhiteSpace(_GraphAccessToken))
+            {
+                return _GraphAccessToken;
+            }
+
+            string[] GraphScope = new string[] { $"https://graph.microsoft.com/.default" };
+            IPublicClientApplication app = PublicClientApplicationBuilder.Create(_appConfiguration.ClientId)
+             .WithAuthority(new Uri($"https://login.microsoftonline.com/{_appConfiguration.TenantDomain}"))
+             .WithRedirectUri(_appConfiguration.RedirectUri)
+             .Build();
+
+            var GraphResult = await app.AcquireTokenInteractive(GraphScope).ExecuteAsync();
+
+            if (GraphResult == null)
+            {
+                throw new InvalidOperationException("Failed to obtain the JWT token for Graph");
+            }
+
+            _GraphAccessToken = GraphResult.AccessToken;
+
+            return _GraphAccessToken;
         }
     }
 }

@@ -1,5 +1,4 @@
 .DS_Store
-appsettings.json
 bin/
 obj/
 
@@ -15,3 +14,4 @@ obj/
 /demos/04-azure-eventhub-listener/.vs/Receiver
 /demos/.vs
 /demos/04-azure-eventhub-listener/.vs/04-azure-eventhub-listener/v16
+/demos/04-azure-eventhub-listener/.vs
