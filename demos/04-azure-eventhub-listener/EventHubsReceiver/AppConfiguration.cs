@@ -9,6 +9,10 @@ namespace EventHubsReceiver
         public string EventHubConnectionString { get; set; }
         public string EventHubName { get; set; }
         public string StorageConnectionString { get; set; }
+        
+        /// <summary>
+        /// The name of the Blob container attached with the EventHub
+        /// </summary>
         public string BlobContainerName { get; set; }
 
         /// <summary>
