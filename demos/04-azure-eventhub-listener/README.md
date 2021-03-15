@@ -150,7 +150,7 @@ Steps:
 
 ##### What happens if the Microsoft Graph change tracking application is missing?
 
-It's possible that the **Microsoft Graph Change Tracking** service principal is missing from your tenant, depending on when the tenant was created and administrative operations. To resolve this issue, run [the following query](https://developer.microsoft.com/en-us/graph/graph-explorer?request=servicePrincipals&method=POST&version=v1.0&GraphUrl=https://graph.microsoft.com&requestBody=eyJhcHBJZCI6IjBiZjMwZjNiLTRhNTItNDhkZi05YTgyLTIzNDkxMGM0YTA4NiJ9) in [Microsoft Graph Explorer](https://developer.microsoft.com/en-us/graph/graph-explorer).
+It's possible that the **Microsoft Graph Change Tracking** service principal is missing from your tenant, depending on when the tenant was created and administrative operations. To resolve this issue, run [the following query](https://developer.microsoft.com/graph/graph-explorer?request=servicePrincipals&method=POST&version=v1.0&GraphUrl=https://graph.microsoft.com&requestBody=eyJhcHBJZCI6IjBiZjMwZjNiLTRhNTItNDhkZi05YTgyLTIzNDkxMGM0YTA4NiJ9) in [Microsoft Graph Explorer](https://developer.microsoft.com/graph/graph-explorer).
 
 Query details:
 
@@ -196,7 +196,6 @@ To create a general-purpose storage account in the Azure portal, follow these st
 1. Select Create.
 1. After deployment of the resource, click view resource and go to the Access Keys menu. 
 1. Click the `show keys` button and copy the Key1 `key` value for usage in the Event hub listener configuration.
-
 
 ### Creating the subscription and receiving notifications
 
