@@ -21,7 +21,7 @@ namespace EventHubsReceiver
         }
 
         /// <summary>
-        /// code frome https://docs.microsoft.com/en-ca/azure/event-hubs/event-hubs-dotnet-standard-getstarted-send
+        /// code from https://docs.microsoft.com/en-ca/azure/event-hubs/event-hubs-dotnet-standard-getstarted-send
         /// </summary>
         /// <returns></returns>
         public async Task ReceiveMessages()

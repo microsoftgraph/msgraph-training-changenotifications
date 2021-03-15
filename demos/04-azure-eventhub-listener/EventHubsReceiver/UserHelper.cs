@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace EventHubsReceiver
 {
     /// <summary>
-    /// Code forom the session (https://www.youtube.com/watch?v=EBbnpFdB92A)
+    /// Code from the session (https://www.youtube.com/watch?v=EBbnpFdB92A)
     /// https://gist.github.com/kalyankrishna1/997f7ca1af1f73f8107c1c8cebfbaf3f
     /// </summary>
     public class UserHelper
