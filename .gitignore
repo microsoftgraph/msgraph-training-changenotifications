@@ -1,5 +1,4 @@
 .DS_Store
-appsettings.json
 bin/
 obj/
 
@@ -8,3 +7,11 @@ obj/
 !./.vscode/tasks.json
 !./.vscode/launch.json
 !./.vscode/extensions.json
+/.vs
+/demos/04-azure-eventhub-listener/packages
+/demos/04-azure-eventhub-listener/.vs/Receiver/v16
+/~$04 Get notifications through Azure Event Hubs.pptx
+/demos/04-azure-eventhub-listener/.vs/Receiver
+/demos/.vs
+/demos/04-azure-eventhub-listener/.vs/04-azure-eventhub-listener/v16
+/demos/04-azure-eventhub-listener/.vs

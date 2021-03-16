@@ -13,10 +13,11 @@ In this lab you will create a .NET Core console application that receives change
 1. [Manage notification subscriptions](./tutorial/07_subscription-management.md)
 1. [Query for changes](./tutorial/08_deltaquery.md)
 1. [Completed Lab](./tutorial/09_completed.md)
+1. [Next Steps - Use Azure EventHub to receive your notifications](./tutorial/10_EventHubs.md)
 
 ## Prerequisites
 
-Before you start this tutorial, you should have [.NET Core 3.1 SDK](https://dotnet.microsoft.com/download) and [Visual Studio Code](https://code.visualstudio.com/) installed on your development machine. 
+Before you start this tutorial, you should have [.NET Core 3.1 SDK](https://dotnet.microsoft.com/download) and [Visual Studio Code](https://code.visualstudio.com/) installed on your development machine.
 
 ## Completed Exercises
 
