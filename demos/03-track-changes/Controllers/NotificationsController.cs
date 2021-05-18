@@ -87,6 +87,7 @@ namespace msgraphapp.Controllers
 
       return Ok();
     }
+
     private GraphServiceClient GetGraphClient()
     {
       var graphClient = new GraphServiceClient(new DelegateAuthenticationProvider((requestMessage) =>
