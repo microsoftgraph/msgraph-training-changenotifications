@@ -9,12 +9,12 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using msgraphapp.Models;
-using Newtonsoft.Json;
 using System.Net;
 using System.Threading;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
 using System.Net.Http.Headers;
+using System.Text.Json;
 
 namespace msgraphapp.Controllers
 {
@@ -58,6 +58,7 @@ namespace msgraphapp.Controllers
       return $"Subscribed. Id: {newSubscription.Id}, Expiration: {newSubscription.ExpirationDateTime}";
     }
 
+
     public async Task<ActionResult<string>> Post([FromQuery] string validationToken = null)
     {
       // handle validation
@@ -74,7 +75,7 @@ namespace msgraphapp.Controllers
 
         Console.WriteLine(content);
 
-        var notifications = JsonConvert.DeserializeObject<Notifications>(content);
+        var notifications = JsonSerializer.Deserialize<Notifications>(content);
 
         foreach (var notification in notifications.Items)
         {
