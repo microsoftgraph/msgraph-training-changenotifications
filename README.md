@@ -18,7 +18,7 @@ In this lab you will create a .NET Core console application that receives change
 
 ## Watch the module
 
-This module has been recorded and is available in the Office Development YouTube channel: [Change Notifications and Track Changes with the Microsoft Graph](https://youtu.be/fThiCZmIcMQ)
+This module has been recorded and is available in the Office Development YouTube channel: [Change Notifications and Track Changes with the Microsoft Graph](https://youtube.com/playlist?list=PLWZJrkeLOrbZoRCqicVK_wo350w1Y4WBH)
 
 ## Contributors
 
@@ -32,6 +32,7 @@ This module has been recorded and is available in the Office Development YouTube
 
 | Version |        Date        |                     Comments                     |
 | ------- | ------------------ | ------------------------------------------------ |
+| 1.14    | September 13, 2021 | FY2022Q1 content refresh                         |
 | 1.13    | May 26, 2021       | Refresh slides to new template                   |
 | 1.12    | May 17, 2021       | FY2021Q4 content refresh                         |
 | 1.11    | March 6, 2021      | FY2021Q3 content refresh                         |
