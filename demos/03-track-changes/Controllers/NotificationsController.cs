@@ -8,13 +8,12 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using msgraphapp.Models;
+using System.Text.Json;
 using System.Net;
 using System.Threading;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
 using System.Net.Http.Headers;
-using System.Text.Json;
 
 namespace msgraphapp.Controllers
 {
@@ -24,7 +23,7 @@ namespace msgraphapp.Controllers
   {
     private readonly MyConfig config;
     private static Dictionary<string, Subscription> Subscriptions = new Dictionary<string, Subscription>();
-    private static Timer subscriptionTimer = null;
+    private static Timer? subscriptionTimer = null;
 
     public NotificationsController(MyConfig config)
     {
@@ -58,8 +57,7 @@ namespace msgraphapp.Controllers
       return $"Subscribed. Id: {newSubscription.Id}, Expiration: {newSubscription.ExpirationDateTime}";
     }
 
-
-    public async Task<ActionResult<string>> Post([FromQuery] string validationToken = null)
+    public async Task<ActionResult<string>> Post([FromQuery] string? validationToken = null)
     {
       // handle validation
       if (!string.IsNullOrEmpty(validationToken))
@@ -75,11 +73,14 @@ namespace msgraphapp.Controllers
 
         Console.WriteLine(content);
 
-        var notifications = JsonSerializer.Deserialize<Notifications>(content);
+        var notifications = JsonSerializer.Deserialize<ChangeNotificationCollection>(content);
 
-        foreach (var notification in notifications.Items)
+        if (notifications != null)
         {
-          Console.WriteLine($"Received notification: '{notification.Resource}', {notification.ResourceData?.Id}");
+          foreach (var notification in notifications.Value)
+          {
+            Console.WriteLine($"Received notification: '{notification.Resource}', {notification.ResourceData.AdditionalData["id"]}");
+          }
         }
       }
 
@@ -121,9 +122,9 @@ namespace msgraphapp.Controllers
       return result.AccessToken;
     }
 
-    private void CheckSubscriptions(Object stateInfo)
+    private void CheckSubscriptions(Object? stateInfo)
     {
-      AutoResetEvent autoEvent = (AutoResetEvent)stateInfo;
+      AutoResetEvent? autoEvent = stateInfo as AutoResetEvent;
 
       Console.WriteLine($"Checking subscriptions {DateTime.Now.ToString("h:mm:ss.fff")}");
       Console.WriteLine($"Current subscription count {Subscriptions.Count()}");
@@ -158,9 +159,8 @@ namespace msgraphapp.Controllers
       Console.WriteLine($"Renewed subscription: {subscription.Id}, New Expiration: {subscription.ExpirationDateTime}");
     }
 
-    private static object DeltaLink = null;
-
-    private static IUserDeltaCollectionPage lastPage = null;
+    private static object? DeltaLink = null;
+    private static IUserDeltaCollectionPage? lastPage = null;
 
     private async Task CheckForUpdates()
     {
@@ -178,7 +178,7 @@ namespace msgraphapp.Controllers
         OutputUsers(users);
       }
 
-      object deltaLink;
+      object? deltaLink;
 
       if (users.AdditionalData.TryGetValue("@odata.deltaLink", out deltaLink))
       {
@@ -195,11 +195,11 @@ namespace msgraphapp.Controllers
       }
     }
 
-    private async Task<IUserDeltaCollectionPage> GetUsers(GraphServiceClient graphClient, object deltaLink)
+    private async Task<IUserDeltaCollectionPage> GetUsers(GraphServiceClient graphClient, object? deltaLink)
     {
       IUserDeltaCollectionPage page;
 
-      if (lastPage == null)
+      if (lastPage == null || deltaLink == null)
       {
         page = await graphClient.Users
                                 .Delta()
@@ -215,6 +215,5 @@ namespace msgraphapp.Controllers
       lastPage = page;
       return page;
     }
-
   }
 }

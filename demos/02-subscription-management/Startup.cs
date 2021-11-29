@@ -29,11 +29,13 @@ namespace msgraphapp
     // This method gets called by the runtime. Use this method to add services to the container.
     public void ConfigureServices(IServiceCollection services)
     {
-      services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+
+      services.AddControllers();
       services.AddSwaggerGen(c =>
       {
         c.SwaggerDoc("v1", new OpenApiInfo { Title = "msgraphapp", Version = "v1" });
       });
+
       var config = new MyConfig();
       Configuration.Bind("MyConfig", config);
       services.AddSingleton(config);
@@ -48,8 +50,6 @@ namespace msgraphapp
         app.UseSwagger();
         app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "msgraphapp v1"));
       }
-
-      // app.UseHttpsRedirection();
 
       app.UseRouting();
 

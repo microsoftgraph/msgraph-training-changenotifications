@@ -6,15 +6,25 @@ This module is based on the following Microsoft Learn module: [Use Change Notifi
 
 ## Lab - Change Notifications and Track Changes with the Microsoft Graph
 
-In this lab you will create a .NET Core console application that receives change notifications from the Microsoft Graph when an update is made to a users account in Azure Active Directory (Azure AD). The application will managed the Change Notification subscription and use Track Changes in the Microsoft Graph to ensure no changes are missed.
+The lab for this module is available in multiple units within the associated Microsoft Learn module. Use the following links to jump to the specific unit. Each Microsoft Learn unit represents a different lab exercise & demo in the presentation.
 
-- [Lab Manual](./Lab.md)
+1. [Exercise: Azure AD apps .NET core web APIs](https://docs.microsoft.com/en-us/learn/modules/msgraph-changenotifications-trackchanges/3-exercise-create-app)
+
+   In this exercise, you'll create a new Azure AD app registration using the Azure AD admin center and grant administrator consent to the required permission scopes.
+
+1. [Exercise: Microsoft Graph change notifications](https://docs.microsoft.com/en-us/learn/modules/msgraph-changenotifications-trackchanges/5-exercise-change-notifications)
+
+   In this exercise, you'll extend the existing ASP.NET console application to receive notifications from Microsoft Graph subscriptions. The notifications are sent after a subscription is successfully created, requesting Microsoft Graph to notify an endpoint when specified entities are created, updated, or deleted.
+
+1. [Exercise: Microsoft Graph track changes (delta query)](https://docs.microsoft.com/en-us/learn/modules/msgraph-changenotifications-trackchanges/7-exercise-track-changes)
+
+   In this exercise, you'll learn how to use the track changes capability in Microsoft Graph. The track changes capability (delta query), enables applications to get a list of all items that have been added, updated, or deleted since the last time the same query was issued.
 
 ## Demos
 
-- [Create a .NET Core app](./demos/01-create-application)
-- [Add Subscription Lifecycle](./demos/02-subscription-management)
-- [Add Track Changes](./demos/03-track-changes)
+- [Azure AD apps .NET core web APIs](./demos/01-create-application)
+- [Microsoft Graph change notifications](./demos/02-subscription-management)
+- [Microsoft Graph track changes (delta query)](./demos/03-track-changes)
 
 ## Watch the module
 
@@ -32,6 +42,7 @@ This module has been recorded and is available in the Office Development YouTube
 
 | Version |        Date        |                     Comments                     |
 | ------- | ------------------ | ------------------------------------------------ |
+| 1.15    | December 8, 2021   | FY2022Q2 content refresh                         |
 | 1.14    | September 13, 2021 | FY2022Q1 content refresh                         |
 | 1.13    | May 26, 2021       | Refresh slides to new template                   |
 | 1.12    | May 17, 2021       | FY2021Q4 content refresh                         |

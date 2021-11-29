@@ -1,11 +1,15 @@
-# Completed project
+# Demo: Microsoft Graph track changes (delta query)
 
-The version of the project in this directory is the completed project.
+This completed project is the result of the lab exercise **Microsoft Graph track changes (delta query)** that is referenced in the [README](../../README.md) in this repo.
 
-> **Note:** It is assumed that you have already registered an application in the app registration portal as specified in [Register and grant consent to the application in Microsoft Graph](../../tutorial/02_create-app.md). You need to configure this version of the sample as follows:
->
-> 1. Rename the file **appsettings.json.example** to **appsettings.json**
-> 1. Edit the **appsettings.json** file and make the following changes.
->     1. `<NGROK URL>` should be set to the ngrok https forwarding address. See [Install ngrok](../../tutorial/03_ngrok.md) for information on installing and running ngrok.
->     1. `<TENANT ID>` should be your Office 365 tenant id you got from the App Registration Portal.
->     1. `<APP ID>` and `<APP SECRET>` should be the application id and secret you got from the App Registration Portal.
+## Prerequisites
+
+- [Microsoft 365 tenant](https://developer.microsoft.com/office/dev-program?ocid=MSlearn)
+- [.NET 5 or 6 SDK](https://dotnet.microsoft.com/download)
+- [Visual Studio Code](https://code.visualstudio.com/)
+
+## Run this Completed Project
+
+- Rename the file **appsettings.json.example** to **appsettings.json**
+- Update the properties in the **appsettings.json** with the values you collected in the first step.
+- Build and run the application by following the instructions in the lab exercise associated with this demo.
