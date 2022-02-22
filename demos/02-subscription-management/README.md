@@ -5,7 +5,7 @@ This completed project is the result of the lab exercise **Microsoft Graph chang
 ## Prerequisites
 
 - [Microsoft 365 tenant](https://developer.microsoft.com/office/dev-program?ocid=MSlearn)
-- [.NET 5 or 6 SDK](https://dotnet.microsoft.com/download)
+- [.NET 5 or .NET 6 SDK](https://dotnet.microsoft.com/download)
 - [Visual Studio Code](https://code.visualstudio.com/)
 
 ## Run this Completed Project
